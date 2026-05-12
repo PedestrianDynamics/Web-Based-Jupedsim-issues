@@ -23,7 +23,7 @@ Stop cleanly (mongod needs ~60 s on a busy DB):
 docker stop --time 60 jupedsim
 ```
 
-The `/data` volume holds MongoDB, scenario uploads, and the backend's sqlite state, so your scenarios survive `docker restart` and `docker rm`. Allow ~60 s on first start.
+The `/data` volume holds MongoDB, scenario uploads, and the backend's SQLite state, so your scenarios survive `docker restart` and `docker rm`. Allow ~60 s on first start.
 
 **Security note**: this image disables OAuth and serves every request as an anonymous "Local User". It's meant for local self-host. Do not expose port 8080 to the public internet.
 
