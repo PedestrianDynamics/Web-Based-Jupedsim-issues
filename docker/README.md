@@ -27,7 +27,7 @@ The `/data` volume holds MongoDB, scenario uploads, and the backend's SQLite sta
 
 **Security note**: this image disables OAuth and serves every request as an anonymous "Local User". It's meant for local self-host. Do not expose port 8080 to the public internet.
 
-**Licensing note**: the all-in-one image bundles MongoDB Community (SSPL v1). Running it as a self-host install is permitted; offering it as a hosted service for third parties would trigger the SSPL's service-provider clauses.
+**Licensing note**: the all-in-one image bundles MongoDB Community, which is distributed under the Server Side Public License (SSPL) v1. See the license text at https://www.mongodb.com/licensing/server-side-public-license and review its requirements for your intended use and deployment model.
 
 ## Multi-container — separate frontend, backends, and MongoDB
 
