@@ -42,15 +42,7 @@ With this repository you can:
 
 ### Run Locally With Docker
 
-You can run the public JuPedSim Web setup locally:
-
-```bash
-cd docker
-cp .env.example .env
-docker compose --env-file .env -f docker-compose.yml up -d
-```
-
-See [docker/README.md](docker/README.md) for the full setup and troubleshooting notes.
+You can run the public JuPedSim Web setup locally. See [docker/README.md](docker/README.md) for the full setup and troubleshooting notes.
 
 ### Run Public Scenarios Locally
 
