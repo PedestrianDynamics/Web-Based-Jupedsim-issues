@@ -59,7 +59,7 @@ accepts either an exported ZIP file or a scenario directory containing one JSON 
 and one WKT file.
 
 ``` python
-from core.scenario import load_scenario, run_scenario
+from jupedsim_scenarios import load_scenario, run_scenario
 
 scenario = load_scenario("jps_2025_03_07.zip")
 
