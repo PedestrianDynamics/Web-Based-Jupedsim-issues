@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from core.scenario import load_scenario
+from jupedsim_scenarios import load_scenario
 
 
 SCENARIOS_DIR = Path(__file__).resolve().parent / "scenarios"

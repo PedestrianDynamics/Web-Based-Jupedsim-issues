@@ -2,11 +2,12 @@
 name = "jupedsim-web-community"
 version = "0.1.0"
 description = "Community resources, scenario scripting, and validation assets for JuPedSim Web"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "ipykernel",
     "jupyter",
     "jupedsim",
+    "jupedsim-scenarios>=0.3.2",
     "numpy",
     "pandas",
     "pedpy",

@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 from shapely.geometry import LineString, Point, Polygon
 
-from core.scenario import Scenario
+from jupedsim_scenarios import Scenario
 
 LENGTH_M = 4.0
 RADIUS_M = 3.0
