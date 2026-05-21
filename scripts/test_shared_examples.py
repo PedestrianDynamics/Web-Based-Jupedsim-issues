@@ -1,8 +1,6 @@
 import copy
 from pathlib import Path
 
-import pytest
-
 from jupedsim_scenarios import Scenario, load_scenario, run_scenario
 
 
@@ -47,16 +45,6 @@ def test_bottleneck_zone_slows_down_agents():
         zone_result.cleanup()
 
 
-@pytest.mark.xfail(
-    reason=(
-        "jupedsim-scenarios v0.3.2 bypasses waiting-stage checkpoints when no "
-        "journeys_v2 is defined — the nearest-exit fallback fires and skips the "
-        "checkpoint entirely. Tracked at "
-        "https://github.com/PedestrianDynamics/jupedsim-scenarios/issues/8 ; "
-        "drop this mark once the bug is fixed and the pin is bumped."
-    ),
-    strict=True,
-)
 def test_waiting_stage_holds_agents_before_exit():
     scenario = load_scenario(str(SCENARIOS_DIR / "waiting-stage-corridor"))
     baseline_raw = copy.deepcopy(scenario.raw)
