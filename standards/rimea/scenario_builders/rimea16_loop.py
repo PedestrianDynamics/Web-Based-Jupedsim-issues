@@ -24,7 +24,7 @@ DEFAULT_FRAME_STEP = 10
 MIN_LAPS_FOR_ANALYSIS = 3
 REFERENCE_CSV = (
     Path(__file__).resolve().parents[1]
-    / "scenarios"
+    / "scenario_files"
     / "rimea16_percentile_reference.csv"
 )
 
