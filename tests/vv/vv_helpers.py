@@ -39,16 +39,30 @@ def run_vv_scenario(
     # Default route assignment: pair each distribution with one exit
     # (round-robin if there are more distributions than exits) via a
     # dedicated journey. Callers can override by passing `journeys_v2`
-    # and per-distribution `journey_weights` directly.
+    # together with per-distribution `journey_weights` directly.
     if journeys_v2 is None:
         if not exits:
             raise ValueError("At least one exit is required to build default journeys")
+        # If a caller pre-populated journey_weights on any distribution but
+        # didn't pass journeys_v2, the intent is ambiguous: appending the
+        # defaults would silently route agents through multiple journeys at
+        # once. Reject the input so the test fails loudly instead of
+        # producing nondeterministic results.
+        conflicting = [
+            dk for dk, dv in distributions.items() if dv.get("journey_weights")
+        ]
+        if conflicting:
+            raise ValueError(
+                "run_vv_scenario was asked to build default journeys, but these "
+                f"distributions already carry journey_weights: {conflicting}. "
+                "Pass journeys_v2 explicitly when overriding the default routing."
+            )
+
         dist_keys = list(distributions.keys())
         exit_keys = list(exits.keys())
         journeys_v2 = []
-        # Mutate the caller-supplied distributions to attach journey_weights
-        # for the default mapping. We deep-copy first so callers' dicts
-        # aren't surprised.
+        # Build a fresh distributions dict so journey_weights only ever lives
+        # on the copies we own — the caller's input dicts stay untouched.
         import copy as _copy
 
         distributions = {k: _copy.deepcopy(v) for k, v in distributions.items()}
@@ -63,9 +77,9 @@ def run_vv_scenario(
                     "sequence": [ek],
                 }
             )
-            distributions[dk].setdefault("journey_weights", []).append(
+            distributions[dk]["journey_weights"] = [
                 {"journey_id": journey_id, "weight": 100}
-            )
+            ]
 
     config = {
         "config": {

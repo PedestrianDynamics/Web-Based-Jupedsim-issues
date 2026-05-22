@@ -766,8 +766,14 @@ class TestRiMEA10RouteAllocation:
         )
 
         agent_to_distribution = self._agent_to_distribution(trajectory, raw["distributions"])
+        # journeys_v2 sequences don't include the distribution. Resolve each
+        # distribution's target exit by following its journey_weights link
+        # into journeys_v2, then taking the last stage of the sequence.
+        journey_by_id = {j["id"]: j for j in raw["journeys_v2"]}
         distribution_to_exit = {
-            journey["stages"][0]: journey["stages"][-1] for journey in raw["journeys"]
+            dist_id: journey_by_id[d["journey_weights"][0]["journey_id"]]["sequence"][-1]
+            for dist_id, d in raw["distributions"].items()
+            if d.get("journey_weights")
         }
         expected_agent_exit = {
             agent_id: distribution_to_exit[distribution_id]
