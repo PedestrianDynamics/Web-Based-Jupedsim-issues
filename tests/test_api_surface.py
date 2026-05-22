@@ -6,19 +6,14 @@ repository depends on. Cheap enough to run on every CI invocation.
 
 import inspect
 
-import pytest
+import jupedsim_scenarios as jps
 
 
-@pytest.fixture(scope="module")
-def jps():
-    return pytest.importorskip("jupedsim_scenarios")
-
-
+# Only symbols this repo actually imports — verified via
+# `rg 'from jupedsim_scenarios import'` across the tree.
 REQUIRED_SYMBOLS = (
     "Scenario",
     "ScenarioResult",
-    "SweepResult",
-    "Trial",
     "load_scenario",
     "run_scenario",
     "run_sweep",
@@ -26,31 +21,44 @@ REQUIRED_SYMBOLS = (
 )
 
 
-def test_required_symbols_exported(jps):
+def test_required_symbols_exported():
     missing = [name for name in REQUIRED_SYMBOLS if not hasattr(jps, name)]
     assert not missing, f"jupedsim_scenarios missing public symbols: {missing}"
 
 
-def test_load_scenario_signature(jps):
+def test_load_scenario_accepts_path():
     sig = inspect.signature(jps.load_scenario)
-    params = list(sig.parameters)
-    assert params == ["path"], (
-        f"load_scenario signature drifted: {sig}; "
-        "this repo passes a single positional path argument."
+    params = list(sig.parameters.values())
+    assert params, "load_scenario() lost all parameters"
+    first = params[0]
+    assert first.name == "path", (
+        f"load_scenario first parameter renamed: {sig}; this repo passes "
+        "the scenario path positionally."
+    )
+    assert first.kind in (
+        inspect.Parameter.POSITIONAL_ONLY,
+        inspect.Parameter.POSITIONAL_OR_KEYWORD,
+    ), f"load_scenario.path can no longer be passed positionally: {sig}"
+    # Any additional parameters must be optional (have a default).
+    extras_without_default = [
+        p for p in params[1:] if p.default is inspect.Parameter.empty
+    ]
+    assert not extras_without_default, (
+        f"load_scenario gained required parameters beyond `path`: {sig}"
     )
 
 
-def test_run_scenario_signature(jps):
+def test_run_scenario_accepts_scenario_and_seed_kwarg():
     sig = inspect.signature(jps.run_scenario)
     params = sig.parameters
     assert "scenario" in params, f"run_scenario lost `scenario` param: {sig}"
     assert "seed" in params, f"run_scenario lost `seed` param: {sig}"
-    assert params["seed"].kind is inspect.Parameter.KEYWORD_ONLY, (
-        f"run_scenario.seed should remain keyword-only: {sig}"
+    assert params["seed"].kind is not inspect.Parameter.POSITIONAL_ONLY, (
+        f"run_scenario.seed can no longer be passed as a keyword: {sig}"
     )
 
 
-def test_scenario_class_exposes_used_methods(jps):
+def test_scenario_class_exposes_used_methods():
     required = {
         "set_seed",
         "set_max_time",
@@ -61,7 +69,7 @@ def test_scenario_class_exposes_used_methods(jps):
     assert not missing, f"Scenario lost methods used by this repo: {missing}"
 
 
-def test_scenario_result_exposes_used_attrs(jps):
+def test_scenario_result_exposes_used_attrs():
     required = {"success", "evacuation_time", "cleanup"}
     missing = required - set(dir(jps.ScenarioResult))
     assert not missing, f"ScenarioResult lost attrs used by this repo: {missing}"
