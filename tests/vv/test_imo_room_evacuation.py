@@ -146,15 +146,19 @@ class TestRE02ExitSensitivity:
         },
     }
 
-    def _make_dist_and_journeys(self, exits: dict) -> tuple[dict, list, list]:
-        """Create one distribution per exit so agents split across exits."""
+    def _make_dist_and_journeys(self, exits: dict) -> tuple[dict, list]:
+        """Create one distribution per exit so agents split across exits.
+
+        Returns (distributions, journeys_v2). Each distribution carries
+        a `journey_weights` entry that pins it to its dedicated journey.
+        """
         exit_keys = list(exits.keys())
         n_per_exit = 200 // len(exit_keys)
         distributions = {}
-        journeys = []
-        transitions = []
+        journeys_v2 = []
         for i, ek in enumerate(exit_keys):
             dk = f"jps-distributions_{i}"
+            jid = f"journey_{i}"
             # Spread spawn areas across the room
             y_lo = i * (20 // len(exit_keys))
             y_hi = (i + 1) * (20 // len(exit_keys))
@@ -176,36 +180,34 @@ class TestRE02ExitSensitivity:
                     "radius_distribution": "constant",
                     "v0_distribution": "constant",
                 },
+                "journey_weights": [{"journey_id": jid, "weight": 100}],
             }
-            jid = f"journey_{i}"
-            journeys.append(
+            journeys_v2.append(
                 {
                     "id": jid,
-                    "stages": [dk, ek],
-                    "transitions": [{"from": dk, "to": ek, "journey_id": jid}],
+                    "name": jid,
+                    "color": "#888888",
+                    "sequence": [ek],
                 }
             )
-            transitions.append({"from": dk, "to": ek, "journey_id": jid})
-        return distributions, journeys, transitions
+        return distributions, journeys_v2
 
     def test_time_ratio(self):
         """Halving exits should increase evacuation time."""
-        dist_4, j_4, t_4 = self._make_dist_and_journeys(self.EXITS_4)
+        dist_4, j_4 = self._make_dist_and_journeys(self.EXITS_4)
         metrics_4, _ = run_vv_scenario(
             walkable_area_wkt=self.WALKABLE,
             exits=self.EXITS_4,
             distributions=dist_4,
-            journeys=j_4,
-            transitions=t_4,
+            journeys_v2=j_4,
             max_simulation_time=600.0,
         )
-        dist_2, j_2, t_2 = self._make_dist_and_journeys(self.EXITS_2)
+        dist_2, j_2 = self._make_dist_and_journeys(self.EXITS_2)
         metrics_2, _ = run_vv_scenario(
             walkable_area_wkt=self.WALKABLE,
             exits=self.EXITS_2,
             distributions=dist_2,
-            journeys=j_2,
-            transitions=t_2,
+            journeys_v2=j_2,
             max_simulation_time=600.0,
         )
         assert metrics_4["agents_remaining"] == 0, "4-exit: not all evacuated"
@@ -285,6 +287,8 @@ class TestRE04Counterflow:
                 "radius_distribution": "constant",
                 "v0_distribution": "constant",
             },
+            # Left distribution → right exit (jps-exits_0).
+            "journey_weights": [{"journey_id": "journey_0", "weight": 100}],
         },
         "jps-distributions_1": {
             "type": "polygon",
@@ -298,6 +302,8 @@ class TestRE04Counterflow:
                 "radius_distribution": "constant",
                 "v0_distribution": "constant",
             },
+            # Right distribution → left exit (jps-exits_1), counterflow.
+            "journey_weights": [{"journey_id": "journey_1", "weight": 100}],
         },
     }
 
@@ -312,48 +318,25 @@ class TestRE04Counterflow:
         )
 
         # With counterflow: 50 left→right + 50 right→left
-        journeys = [
+        journeys_v2 = [
             {
                 "id": "journey_0",
-                "stages": ["jps-distributions_0", "jps-exits_0"],
-                "transitions": [
-                    {
-                        "from": "jps-distributions_0",
-                        "to": "jps-exits_0",
-                        "journey_id": "journey_0",
-                    }
-                ],
+                "name": "journey_0",
+                "color": "#888888",
+                "sequence": ["jps-exits_0"],
             },
             {
                 "id": "journey_1",
-                "stages": ["jps-distributions_1", "jps-exits_1"],
-                "transitions": [
-                    {
-                        "from": "jps-distributions_1",
-                        "to": "jps-exits_1",
-                        "journey_id": "journey_1",
-                    }
-                ],
-            },
-        ]
-        transitions = [
-            {
-                "from": "jps-distributions_0",
-                "to": "jps-exits_0",
-                "journey_id": "journey_0",
-            },
-            {
-                "from": "jps-distributions_1",
-                "to": "jps-exits_1",
-                "journey_id": "journey_1",
+                "name": "journey_1",
+                "color": "#888888",
+                "sequence": ["jps-exits_1"],
             },
         ]
         metrics_counter, _ = run_vv_scenario(
             walkable_area_wkt=self.WALKABLE,
             exits=self.EXIT_BOTH,
             distributions=self.DIST_COUNTERFLOW,
-            journeys=journeys,
-            transitions=transitions,
+            journeys_v2=journeys_v2,
             max_simulation_time=300.0,
         )
 
