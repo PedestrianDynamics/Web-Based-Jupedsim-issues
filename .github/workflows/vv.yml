@@ -115,7 +115,11 @@ jobs:
         "
 
     - name: Update pinned issue
-      if: always()
+      # Only push/schedule runs on main update the pinned tracking issue.
+      # PR builds (especially from forks) have reduced GITHUB_TOKEN scope
+      # and would either fail the PATCH or pollute the pinned issue with
+      # in-flight PR results.
+      if: always() && github.event_name != 'pull_request'
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
