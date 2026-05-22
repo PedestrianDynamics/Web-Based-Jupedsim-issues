@@ -5,6 +5,10 @@ on:
     - cron: "0 6 * * 1"
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   execute-notebooks:
     runs-on: ubuntu-latest
@@ -12,18 +16,22 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
       - name: Sync environment
-        run: uv sync --extra dev
+        run: uv sync
 
       - name: Execute notebooks
         run: |
           set -e
           mkdir -p results/notebooks
           failed=()
+          # `set -e` is intentionally disabled inside the `if`: we want to
+          # record each failing notebook and continue, then fail at the end.
           while IFS= read -r nb; do
             echo "::group::Executing $nb"
-            if uv run --extra dev jupyter nbconvert \
+            if uv run jupyter nbconvert \
                  --to html \
                  --execute \
                  --ExecutePreprocessor.timeout=1800 \
@@ -39,6 +47,7 @@ jobs:
           if [ ${#failed[@]} -gt 0 ]; then
             echo "Failed notebooks:"
             printf '  %s\n' "${failed[@]}"
+            printf '%s\n' "${failed[@]}" > results/failed-notebooks.txt
             exit 1
           fi
 
@@ -48,3 +57,52 @@ jobs:
         with:
           name: executed-notebooks
           path: results/notebooks
+
+      - name: Open issue on failure
+        if: failure() && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let failedList = '(see workflow logs)';
+            try {
+              failedList = fs.readFileSync('results/failed-notebooks.txt', 'utf8')
+                .trim()
+                .split('\n')
+                .map(l => `- \`${l}\``)
+                .join('\n');
+            } catch (_) {}
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const title = 'Weekly notebook execution failed';
+            const body = [
+              'The scheduled notebook execution workflow failed.',
+              '',
+              '**Failed notebooks:**',
+              failedList,
+              '',
+              `**Run:** ${runUrl}`,
+              '',
+              'Common causes: jupedsim-scenarios API change, dependency drift, or scenario regressions.',
+            ].join('\n');
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'notebook-ci',
+            });
+            if (issues.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues[0].number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['notebook-ci'],
+              });
+            }
