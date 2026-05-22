@@ -9,6 +9,14 @@ on:
       - "pyproject.toml"
       - "uv.lock"
       - ".github/workflows/rimea.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "tests/vv/test_rimea.py"
+      - "tests/vv/vv_helpers.py"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/rimea.yml"
   schedule:
     - cron: "0 6 * * 1"
   workflow_dispatch: {}
