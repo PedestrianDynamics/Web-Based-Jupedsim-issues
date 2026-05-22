@@ -12,7 +12,7 @@ The web app is used for **scenario design**. Python is used for
             ↓
     Export scenario ZIP (config.json + geometry.wkt)
             ↓
-    load_scenario("jps_2025_03_07.zip")
+    load_scenario("scenario.zip")
             ↓
     Run simulations in Python
             ↓
@@ -33,17 +33,16 @@ All simulations run **locally**, without relying on the remote server.
 
 This project uses [uv](https://docs.astral.sh/uv/getting-started/installation/) for dependency management.
 
-Create venv and install dependencies:
+Create venv and install dependencies (from the repository root):
 
 ```bash
-cd ..
 uv sync --extra dev
-cd standards
 ```
 
-Run Jupyter directly:
+Run Jupyter from inside this directory:
 
 ```bash
+cd standards
 uv run --project .. jupyter notebook
 ```
 
@@ -61,7 +60,7 @@ and one WKT file.
 ``` python
 from jupedsim_scenarios import load_scenario, run_scenario
 
-scenario = load_scenario("jps_2025_03_07.zip")
+scenario = load_scenario("scenario.zip")
 
 print(scenario.summary())
 

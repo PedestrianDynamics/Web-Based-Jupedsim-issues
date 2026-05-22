@@ -24,7 +24,6 @@ With this repository you can:
 - Report issues and discuss feature ideas
 - Run the public Docker setup locally
 - Execute public example scenarios from Python
-- Reuse mirrored shared scenario logic from the app
 - Inspect public V&V assets and workflows
 
 
@@ -65,7 +64,6 @@ Start here:
 
 - [`docker/`](docker/) contains the public local deployment setup for JuPedSim Web.
 - [`standards/`](standards/) contains the local Python runner, notebooks, and example scenarios.
-- [`shared/`](shared/) contains mirrored public-safe shared modules used by the local scenario runner.
 - [`tests/vv/`](tests/vv/) contains verification and validation assets and workflows.
 - [`geometries/`](geometries/) contains public geometry examples and format references.
 

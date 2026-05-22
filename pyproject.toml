@@ -20,6 +20,10 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
+testpaths = [
+    "tests",
+    "standards/tests",
+]
 markers = [
     "vv: verification and validation tests",
 ]

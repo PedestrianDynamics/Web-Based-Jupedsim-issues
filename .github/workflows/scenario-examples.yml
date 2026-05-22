@@ -3,21 +3,35 @@ name: Scenario Examples
 on:
   push:
     branches: [main]
+    paths:
+      - "standards/tests/**"
+      - "standards/general/scenario_files/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/scenario-examples.yml"
   pull_request:
     branches: [main]
+    paths:
+      - "standards/tests/**"
+      - "standards/general/scenario_files/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/scenario-examples.yml"
   workflow_dispatch: {}
 
 jobs:
-  shared-scenario-examples:
+  scenario-examples:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
       - name: Sync environment
         run: uv sync --extra dev
 
-      - name: Run shared scenario examples
+      - name: Run webapp scenario examples
         working-directory: standards
         run: uv run --project .. pytest tests/test_webapp_scenarios.py -q
