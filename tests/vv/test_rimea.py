@@ -28,9 +28,11 @@ from vv_helpers import (
     run_vv_scenario,
 )
 
-SCRIPTS_DIR = pathlib.Path(__file__).resolve().parents[2] / "scripts"
-if str(SCRIPTS_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPTS_DIR))
+STANDARDS_DIR = pathlib.Path(__file__).resolve().parents[2] / "standards"
+if str(STANDARDS_DIR / "rimea") not in sys.path:
+    sys.path.insert(0, str(STANDARDS_DIR / "rimea"))
+if str(STANDARDS_DIR) not in sys.path:
+    sys.path.insert(0, str(STANDARDS_DIR))
 
 from scenario_builders.rimea07_demographic import (
     AGE_GROUPS,
@@ -731,7 +733,7 @@ class TestRiMEA10RouteAllocation:
     Expected: Agents go to their assigned exits.
     """
 
-    SCENARIO_ZIP = SCRIPTS_DIR / "scenarios" / "rimea" / "Rimea-10.zip"
+    SCENARIO_ZIP = STANDARDS_DIR / "scenario_files" / "rimea" / "Rimea-10.zip"
 
     def _load_raw(self):
         with zipfile.ZipFile(self.SCENARIO_ZIP) as zf:
@@ -1199,7 +1201,7 @@ class TestRiMEA14RouteChoice:
     """
 
     def test_route_choice(self):
-        scenario_zip = SCRIPTS_DIR / "scenarios" / "rimea" / "Rimea-14.zip"
+        scenario_zip = STANDARDS_DIR / "scenario_files" / "rimea" / "Rimea-14.zip"
         with zipfile.ZipFile(scenario_zip) as archive:
             raw = json.loads(archive.read("config.json"))
             walkable_area_wkt = archive.read("geometry.wkt").decode()

@@ -46,25 +46,25 @@ You can run the public JuPedSim Web setup locally. See [docker/README.md](docker
 
 ### Run Public Scenarios Locally
 
-The [`scripts/`](scripts/) directory contains a standalone Python workflow for running exported scenarios locally, including waiting stages, zones, and example scenarios.
+The [`standards/`](standards/) directory contains a standalone Python workflow for running exported scenarios locally, including waiting stages, zones, and example scenarios.
 
 ```bash
 uv sync --extra dev
-cd scripts
+cd standards
 uv run jupyter notebook
 ```
 
 Start here:
 
-- [scripts/README.md](scripts/README.md)
-- [scripts/core/scenario.py](scripts/core/scenario.py)
-- [scripts/scenarios/](scripts/scenarios/)
-- [scripts/bottleneck_zone_nt_diagram.ipynb](scripts/bottleneck_zone_nt_diagram.ipynb)
+- [standards/README.md](standards/README.md)
+- [standards/rimea/scenario_builders/](standards/rimea/scenario_builders/)
+- [standards/scenario_files/](standards/scenario_files/)
+- [standards/general/bottleneck_zone_nt_diagram.ipynb](standards/general/bottleneck_zone_nt_diagram.ipynb)
 
 ## Repository Layout
 
 - [`docker/`](docker/) contains the public local deployment setup for JuPedSim Web.
-- [`scripts/`](scripts/) contains the local Python runner, notebooks, and example scenarios.
+- [`standards/`](standards/) contains the local Python runner, notebooks, and example scenarios.
 - [`shared/`](shared/) contains mirrored public-safe shared modules used by the local scenario runner.
 - [`tests/vv/`](tests/vv/) contains verification and validation assets and workflows.
 - [`geometries/`](geometries/) contains public geometry examples and format references.

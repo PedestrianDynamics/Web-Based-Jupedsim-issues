@@ -5,7 +5,7 @@ import pytest
 from jupedsim_scenarios import load_scenario
 
 
-SCENARIOS_DIR = Path(__file__).resolve().parent / "scenarios"
+SCENARIOS_DIR = Path(__file__).resolve().parent / "scenario_files"
 
 
 def test_runtime_mutators_keep_raw_config_in_sync():
