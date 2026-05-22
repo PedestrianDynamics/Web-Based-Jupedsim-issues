@@ -28,7 +28,7 @@ def _scenario_clone(scenario: Scenario, raw):
 
 
 def test_bottleneck_zone_slows_down_agents():
-    scenario = load_scenario(str(SCENARIOS_DIR / "bottleneck-zone"))
+    scenario = load_scenario(str(SCENARIOS_DIR / "general" / "bottleneck-zone"))
     baseline_raw = copy.deepcopy(scenario.raw)
     baseline_raw["zones"] = {}
 
@@ -46,7 +46,7 @@ def test_bottleneck_zone_slows_down_agents():
 
 
 def test_waiting_stage_holds_agents_before_exit():
-    scenario = load_scenario(str(SCENARIOS_DIR / "waiting-stage-corridor"))
+    scenario = load_scenario(str(SCENARIOS_DIR / "general" / "waiting-stage-corridor"))
     baseline_raw = copy.deepcopy(scenario.raw)
     baseline_raw["checkpoints"]["jps-checkpoints_0"]["waiting_time"] = 0.0
 
