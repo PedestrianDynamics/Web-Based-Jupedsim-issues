@@ -7,7 +7,7 @@ dependencies = [
     "ipykernel",
     "jupyter",
     "jupedsim",
-    "jupedsim-scenarios>=0.3.3",
+    "jupedsim-scenarios>=0.3.4",
     "numpy",
     "pandas",
     "pedpy",
