@@ -1,0 +1,50 @@
+name: Execute Notebooks
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch: {}
+
+jobs:
+  execute-notebooks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Sync environment
+        run: uv sync --extra dev
+
+      - name: Execute notebooks
+        run: |
+          set -e
+          mkdir -p results/notebooks
+          failed=()
+          while IFS= read -r nb; do
+            echo "::group::Executing $nb"
+            if uv run --extra dev jupyter nbconvert \
+                 --to html \
+                 --execute \
+                 --ExecutePreprocessor.timeout=1800 \
+                 --output-dir="results/notebooks/$(dirname "$nb")" \
+                 "$nb"; then
+              echo "OK: $nb"
+            else
+              echo "FAIL: $nb"
+              failed+=("$nb")
+            fi
+            echo "::endgroup::"
+          done < <(find standards -name "*.ipynb" -not -path "*/.ipynb_checkpoints/*" | sort)
+          if [ ${#failed[@]} -gt 0 ]; then
+            echo "Failed notebooks:"
+            printf '  %s\n' "${failed[@]}"
+            exit 1
+          fi
+
+      - name: Upload rendered HTML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: executed-notebooks
+          path: results/notebooks

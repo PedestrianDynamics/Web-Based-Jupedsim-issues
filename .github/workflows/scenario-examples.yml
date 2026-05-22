@@ -20,4 +20,4 @@ jobs:
 
       - name: Run shared scenario examples
         working-directory: standards
-        run: uv run --project .. pytest test_shared_examples.py -q
+        run: uv run --project .. pytest tests/test_webapp_scenarios.py -q

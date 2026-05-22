@@ -4,7 +4,7 @@ from pathlib import Path
 from jupedsim_scenarios import Scenario, load_scenario, run_scenario
 
 
-STANDARDS_DIR = Path(__file__).resolve().parent
+STANDARDS_DIR = Path(__file__).resolve().parents[1]
 
 
 def _scenario_clone(scenario: Scenario, raw):
