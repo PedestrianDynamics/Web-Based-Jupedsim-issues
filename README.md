@@ -58,7 +58,7 @@ Start here:
 
 - [standards/README.md](standards/README.md)
 - [standards/rimea/scenario_builders/](standards/rimea/scenario_builders/)
-- [standards/scenario_files/](standards/scenario_files/)
+- [standards/general/scenario_files/](standards/general/scenario_files/)
 - [standards/general/bottleneck_zone_nt_diagram.ipynb](standards/general/bottleneck_zone_nt_diagram.ipynb)
 
 ## Repository Layout

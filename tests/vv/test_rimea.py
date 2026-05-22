@@ -733,7 +733,7 @@ class TestRiMEA10RouteAllocation:
     Expected: Agents go to their assigned exits.
     """
 
-    SCENARIO_ZIP = STANDARDS_DIR / "scenario_files" / "rimea" / "Rimea-10.zip"
+    SCENARIO_ZIP = STANDARDS_DIR / "rimea" / "scenario_files" / "Rimea-10.zip"
 
     def _load_raw(self):
         with zipfile.ZipFile(self.SCENARIO_ZIP) as zf:
@@ -1201,7 +1201,7 @@ class TestRiMEA14RouteChoice:
     """
 
     def test_route_choice(self):
-        scenario_zip = STANDARDS_DIR / "scenario_files" / "rimea" / "Rimea-14.zip"
+        scenario_zip = STANDARDS_DIR / "rimea" / "scenario_files" / "Rimea-14.zip"
         with zipfile.ZipFile(scenario_zip) as archive:
             raw = json.loads(archive.read("config.json"))
             walkable_area_wkt = archive.read("geometry.wkt").decode()

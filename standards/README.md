@@ -74,7 +74,7 @@ print(f"All evacuated: {result.agents_remaining == 0}")
 You can also load one of the repository examples directly:
 
 ``` python
-scenario = load_scenario("scenario_files/general/bottleneck-zone")
+scenario = load_scenario("general/scenario_files/bottleneck-zone")
 ```
 
 ------------------------------------------------------------------------
@@ -151,7 +151,7 @@ scenario:
 ``` python
 from copy import deepcopy
 
-base = load_scenario("scenario_files/general/bottleneck-zone")
+base = load_scenario("general/scenario_files/bottleneck-zone")
 
 variant_raw = deepcopy(base.raw)
 variant_raw["zones"]["jps-zones_0"]["speed_factor"] = 0.5
@@ -346,7 +346,7 @@ for model in models:
     ├── rimea/
     │   ├── rimea07_demographic_params.ipynb (and other RiMEA notebooks)
     │   └── scenario_builders/
-    ├── scenario_files/
+    ├── <standard>/scenario_files/
     └── ../pyproject.toml
 
     
@@ -355,5 +355,5 @@ for model in models:
 | `core/scenario.py` | Reusable scenario loading and simulation interface |
 | `core/__init__.py` | Public imports for the reusable scenario module |
 | `general/bottleneck_zone_nt_diagram.ipynb` | Example notebook comparing bottleneck zone variants with an $N$-$T$ diagram |
-| `scenario_files/` | Example scenario directories and exported inputs for local runs |
+| `<standard>/scenario_files/` | Example scenario directories and exported inputs for local runs |
 | `../pyproject.toml` | Root Python project and shared dependency definition managed with `uv` |
