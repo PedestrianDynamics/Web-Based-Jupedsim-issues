@@ -70,6 +70,7 @@ def build_distribution_specs() -> list[dict[str, Any]]:
 
 def build_raw_scenario(seed: int = 42, max_simulation_time: float = 140.0) -> dict[str, Any]:
     """Return the RiMEA 07 scenario config as a raw JSON-like dict."""
+    JOURNEY_ID = "jps-journeys_0"
     distributions = {}
     for spec in build_distribution_specs():
         distributions[spec["distribution_id"]] = {
@@ -87,6 +88,8 @@ def build_raw_scenario(seed: int = 42, max_simulation_time: float = 140.0) -> di
                 "radius_distribution": "constant",
                 "v0_distribution": "constant",
             },
+            # Single-journey-fan-out: every source feeds the same journey.
+            "journey_weights": [{"journey_id": JOURNEY_ID, "weight": 100}],
         }
 
     return {
@@ -114,5 +117,12 @@ def build_raw_scenario(seed: int = 42, max_simulation_time: float = 140.0) -> di
                 "max_throughput": 0,
             }
         },
-        "journeys": [{"id": "jps-journeys_0", "stages": ["jps-exits_0"]}],
+        "journeys_v2": [
+            {
+                "id": JOURNEY_ID,
+                "name": JOURNEY_ID,
+                "color": "#888888",
+                "sequence": ["jps-exits_0"],
+            }
+        ],
     }

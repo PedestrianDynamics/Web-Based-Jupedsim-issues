@@ -226,8 +226,7 @@ def build_loop_scenario(
     }
 
     distributions = {}
-    journeys = []
-    transitions = []
+    journeys_v2 = []
     for index, (x_pos, y_pos) in enumerate(geometry.positions):
         distribution_id = f"jps-distributions_{index}"
         journey_id = f"journey_{index}"
@@ -251,20 +250,18 @@ def build_loop_scenario(
                 "v0": desired_speed,
                 "distribution_mode": "by_number",
             },
+            "journey_weights": [{"journey_id": journey_id, "weight": 100}],
         }
-        journeys.append(
+        # Each agent rides its own journey that walks the checkpoint ring
+        # in order from its starting position. No exit — Rimea 16 measures
+        # behaviour on a closed loop within the time budget.
+        journeys_v2.append(
             {
                 "id": journey_id,
-                "stages": [distribution_id, *ordered_checkpoints],
+                "name": journey_id,
+                "color": "#888888",
+                "sequence": list(ordered_checkpoints),
             }
-        )
-        rotated_pairs = list(zip(ordered_checkpoints, ordered_checkpoints[1:] + ordered_checkpoints[:1]))
-        transitions.extend(
-            [{"from": distribution_id, "to": ordered_checkpoints[0], "journey_id": journey_id}]
-            + [
-                {"from": source, "to": target, "journey_id": journey_id}
-                for source, target in rotated_pairs
-            ]
         )
 
     first_position = geometry.positions[0]
@@ -285,8 +282,7 @@ def build_loop_scenario(
                 "coordinates": _square(first_position[0], first_position[1], 0.08)
             }
         },
-        "journeys": journeys,
-        "transitions": transitions,
+        "journeys_v2": journeys_v2,
     }
     scenario = Scenario(
         raw=raw,

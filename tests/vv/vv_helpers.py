@@ -29,31 +29,57 @@ def run_vv_scenario(
     max_simulation_time: float = 300.0,
     seed: int = 42,
     checkpoints: dict | None = None,
-    journeys: list | None = None,
-    transitions: list | None = None,
+    journeys_v2: list | None = None,
     model_params: dict | None = None,
 ) -> tuple[dict, "pedpy.TrajectoryData"]:
     """Run a V&V scenario and return (metrics, trajectory)."""
     if not HAS_VV_DEPS:
         pytest.skip("V&V runtime dependencies not installed")
 
-    if journeys is None and transitions is None:
+    # Default route assignment: pair each distribution with one exit
+    # (round-robin if there are more distributions than exits) via a
+    # dedicated journey. Callers can override by passing `journeys_v2`
+    # together with per-distribution `journey_weights` directly.
+    if journeys_v2 is None:
         if not exits:
             raise ValueError("At least one exit is required to build default journeys")
+        # If a caller pre-populated journey_weights on any distribution but
+        # didn't pass journeys_v2, the intent is ambiguous: appending the
+        # defaults would silently route agents through multiple journeys at
+        # once. Reject the input so the test fails loudly instead of
+        # producing nondeterministic results.
+        conflicting = [
+            dk for dk, dv in distributions.items() if dv.get("journey_weights")
+        ]
+        if conflicting:
+            raise ValueError(
+                "run_vv_scenario was asked to build default journeys, but these "
+                f"distributions already carry journey_weights: {conflicting}. "
+                "Pass journeys_v2 explicitly when overriding the default routing."
+            )
+
         dist_keys = list(distributions.keys())
         exit_keys = list(exits.keys())
-        journeys = []
-        transitions = []
+        journeys_v2 = []
+        # Build a fresh distributions dict so journey_weights only ever lives
+        # on the copies we own — the caller's input dicts stay untouched.
+        import copy as _copy
+
+        distributions = {k: _copy.deepcopy(v) for k, v in distributions.items()}
         for i, dk in enumerate(dist_keys):
             ek = exit_keys[i % len(exit_keys)]
             journey_id = f"journey_{i}"
-            journeys.append(
+            journeys_v2.append(
                 {
                     "id": journey_id,
-                    "stages": [dk, ek],
+                    "name": journey_id,
+                    "color": "#888888",
+                    "sequence": [ek],
                 }
             )
-            transitions.append({"from": dk, "to": ek, "journey_id": journey_id})
+            distributions[dk]["journey_weights"] = [
+                {"journey_id": journey_id, "weight": 100}
+            ]
 
     config = {
         "config": {
@@ -72,8 +98,7 @@ def run_vv_scenario(
         "distributions": distributions,
         "checkpoints": checkpoints or {},
         "zones": {},
-        "journeys": journeys,
-        "transitions": transitions,
+        "journeys_v2": journeys_v2,
     }
 
     with tempfile.TemporaryDirectory() as scenario_dir:

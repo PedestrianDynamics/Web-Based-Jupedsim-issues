@@ -80,6 +80,7 @@ def build_distribution_specs(direction: str) -> list[dict]:
 
 def build_raw_scenario(direction: str, seed: int = 42, max_simulation_time: float = 200.0) -> dict:
     """Build the raw scenario for either the upstairs or downstairs case."""
+    JOURNEY_ID = "jps-journeys_0"
     distributions = {}
     for spec in build_distribution_specs(direction):
         distributions[spec["distribution_id"]] = {
@@ -95,6 +96,7 @@ def build_raw_scenario(direction: str, seed: int = 42, max_simulation_time: floa
                 "radius_distribution": "constant",
                 "v0_distribution": "constant",
             },
+            "journey_weights": [{"journey_id": JOURNEY_ID, "weight": 100}],
         }
 
     return {
@@ -122,7 +124,14 @@ def build_raw_scenario(direction: str, seed: int = 42, max_simulation_time: floa
                 "speed_factor": STAIR_ZONE_SPEED_FACTORS[direction],
             }
         },
-        "journeys": [{"id": "jps-journeys_0", "stages": ["jps-exits_0"]}],
+        "journeys_v2": [
+            {
+                "id": JOURNEY_ID,
+                "name": JOURNEY_ID,
+                "color": "#888888",
+                "sequence": ["jps-exits_0"],
+            }
+        ],
     }
 
 

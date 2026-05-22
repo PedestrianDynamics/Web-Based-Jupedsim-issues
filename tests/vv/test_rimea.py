@@ -157,6 +157,7 @@ class TestRiMEA02SpeedUpStairs:
                 "radius_distribution": "constant",
                 "v0_distribution": "constant",
             },
+            "journey_weights": [{"journey_id": "jps-journeys_0", "weight": 100}],
         }
     }
     ZONES = {
@@ -165,10 +166,12 @@ class TestRiMEA02SpeedUpStairs:
             "speed_factor": 0.5,
         }
     }
-    JOURNEYS = [
+    JOURNEYS_V2 = [
         {
             "id": "jps-journeys_0",
-            "stages": ["jps-distributions_0", "jps-exits_0"],
+            "name": "jps-journeys_0",
+            "color": "#888888",
+            "sequence": ["jps-exits_0"],
         }
     ]
 
@@ -187,7 +190,7 @@ class TestRiMEA02SpeedUpStairs:
             "distributions": self.DIST,
             "exits": self.EXIT,
             "zones": self.ZONES,
-            "journeys": self.JOURNEYS,
+            "journeys_v2": self.JOURNEYS_V2,
         }
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -238,6 +241,7 @@ class TestRiMEA03SpeedDownStairs:
                 "radius_distribution": "constant",
                 "v0_distribution": "constant",
             },
+            "journey_weights": [{"journey_id": "jps-journeys_0", "weight": 100}],
         }
     }
     ZONES = {
@@ -246,10 +250,12 @@ class TestRiMEA03SpeedDownStairs:
             "speed_factor": 0.75,
         }
     }
-    JOURNEYS = [
+    JOURNEYS_V2 = [
         {
             "id": "jps-journeys_0",
-            "stages": ["jps-distributions_0", "jps-exits_0"],
+            "name": "jps-journeys_0",
+            "color": "#888888",
+            "sequence": ["jps-exits_0"],
         }
     ]
 
@@ -268,7 +274,7 @@ class TestRiMEA03SpeedDownStairs:
             "distributions": self.DIST,
             "exits": self.EXIT,
             "zones": self.ZONES,
-            "journeys": self.JOURNEYS,
+            "journeys_v2": self.JOURNEYS_V2,
         }
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -332,12 +338,15 @@ class TestRiMEA05PremovementTime:
                 "premovement_param_b": 100.0,
                 "premovement_seed": 12345,
             },
+            "journey_weights": [{"journey_id": "jps-journeys_0", "weight": 100}],
         }
     }
-    JOURNEYS = [
+    JOURNEYS_V2 = [
         {
             "id": "jps-journeys_0",
-            "stages": ["jps-distributions_0", "jps-exits_0"],
+            "name": "jps-journeys_0",
+            "color": "#888888",
+            "sequence": ["jps-exits_0"],
         }
     ]
 
@@ -355,7 +364,7 @@ class TestRiMEA05PremovementTime:
             },
             "distributions": self.DIST,
             "exits": self.EXIT,
-            "journeys": self.JOURNEYS,
+            "journeys_v2": self.JOURNEYS_V2,
         }
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -628,16 +637,20 @@ class TestRiMEA09LargePublicSpace:
 
     @staticmethod
     def _make_dist_and_journeys(exits):
-        """Create per-exit distributions so agents split across exits."""
+        """Create per-exit distributions so agents split across exits.
+
+        Returns (distributions, journeys_v2). Each distribution carries
+        a `journey_weights` entry pinning it to its dedicated journey.
+        """
         exit_keys = list(exits.keys())
         n_per = 200 // len(exit_keys)
         distributions = {}
-        journeys = []
-        transitions = []
+        journeys_v2 = []
         # Quadrants for spawn areas
         quads = [(2, 2, 9, 9), (11, 2, 18, 9), (2, 11, 9, 18), (11, 11, 18, 18)]
         for i, ek in enumerate(exit_keys):
             dk = f"jps-distributions_{i}"
+            jid = f"journey_{i}"
             q = quads[i % len(quads)]
             distributions[dk] = {
                 "type": "polygon",
@@ -657,36 +670,34 @@ class TestRiMEA09LargePublicSpace:
                     "radius_distribution": "constant",
                     "v0_distribution": "constant",
                 },
+                "journey_weights": [{"journey_id": jid, "weight": 100}],
             }
-            jid = f"journey_{i}"
-            journeys.append(
+            journeys_v2.append(
                 {
                     "id": jid,
-                    "stages": [dk, ek],
-                    "transitions": [{"from": dk, "to": ek, "journey_id": jid}],
+                    "name": jid,
+                    "color": "#888888",
+                    "sequence": [ek],
                 }
             )
-            transitions.append({"from": dk, "to": ek, "journey_id": jid})
-        return distributions, journeys, transitions
+        return distributions, journeys_v2
 
     def test_closing_exits_increases_time(self):
         """Closing 2 of 4 exits should increase evacuation time."""
-        dist_4, j_4, t_4 = self._make_dist_and_journeys(self.EXITS_4)
+        dist_4, j_4 = self._make_dist_and_journeys(self.EXITS_4)
         metrics_4, _ = run_vv_scenario(
             walkable_area_wkt=self.WALKABLE,
             exits=self.EXITS_4,
             distributions=dist_4,
-            journeys=j_4,
-            transitions=t_4,
+            journeys_v2=j_4,
             max_simulation_time=600.0,
         )
-        dist_2, j_2, t_2 = self._make_dist_and_journeys(self.EXITS_2)
+        dist_2, j_2 = self._make_dist_and_journeys(self.EXITS_2)
         metrics_2, _ = run_vv_scenario(
             walkable_area_wkt=self.WALKABLE,
             exits=self.EXITS_2,
             distributions=dist_2,
-            journeys=j_2,
-            transitions=t_2,
+            journeys_v2=j_2,
             max_simulation_time=600.0,
         )
         assert metrics_4["agents_remaining"] == 0, "4-exit: not all evacuated"
@@ -755,8 +766,14 @@ class TestRiMEA10RouteAllocation:
         )
 
         agent_to_distribution = self._agent_to_distribution(trajectory, raw["distributions"])
+        # journeys_v2 sequences don't include the distribution. Resolve each
+        # distribution's target exit by following its journey_weights link
+        # into journeys_v2, then taking the last stage of the sequence.
+        journey_by_id = {j["id"]: j for j in raw["journeys_v2"]}
         distribution_to_exit = {
-            journey["stages"][0]: journey["stages"][-1] for journey in raw["journeys"]
+            dist_id: journey_by_id[d["journey_weights"][0]["journey_id"]]["sequence"][-1]
+            for dist_id, d in raw["distributions"].items()
+            if d.get("journey_weights")
         }
         expected_agent_exit = {
             agent_id: distribution_to_exit[distribution_id]
@@ -1187,8 +1204,17 @@ class TestRiMEA14RouteChoice:
         staged_traj = run_variant(json.loads(json.dumps(raw)))
 
         direct_raw = json.loads(json.dumps(raw))
-        direct_raw["journeys"] = [{"id": "journey_0", "stages": ["jps-distributions_0", "jps-exits_0"]}]
-        direct_raw["transitions"] = []
+        # Override the multi-stage staged route with a direct distribution → exit
+        # route. journey_id reused so the per-distribution journey_weights from
+        # the parent raw keep pointing at the right journey.
+        direct_raw["journeys_v2"] = [
+            {
+                "id": "journey_0",
+                "name": "journey_0",
+                "color": "#888888",
+                "sequence": ["jps-exits_0"],
+            }
+        ]
         direct_traj = run_variant(direct_raw)
 
         def classify_routes(traj_df):
