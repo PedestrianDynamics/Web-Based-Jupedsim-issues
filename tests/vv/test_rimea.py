@@ -52,7 +52,7 @@ from scenario_builders.rimea16_loop import (
     load_reference_band,
     summarize_reference_fit,
 )
-from core.scenario import load_scenario, run_scenario
+from jupedsim_scenarios import load_scenario, run_scenario
 
 pytestmark = [
     pytest.mark.vv,

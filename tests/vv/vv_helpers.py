@@ -11,7 +11,7 @@ import pytest
 
 try:
     import pedpy
-    from core.scenario import load_scenario, run_scenario
+    from jupedsim_scenarios import load_scenario, run_scenario
 
     HAS_VV_DEPS = True
 except ImportError:
