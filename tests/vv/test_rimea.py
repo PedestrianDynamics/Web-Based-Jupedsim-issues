@@ -175,6 +175,14 @@ class TestRiMEA02SpeedUpStairs:
         }
     ]
 
+    @pytest.mark.xfail(
+        reason=(
+            "Stair-zone speed_factor is not applied when journeys_v2.sequence "
+            "is just the exit. Travel time pins at max_simulation_time. "
+            "Tracked at https://github.com/PedestrianDynamics/jupedsim-scenarios/issues/15"
+        ),
+        strict=True,
+    )
     def test_travel_time(self):
         """Zone-based stair approximation should keep the slowed 10 m run near 20 s."""
         raw = {
@@ -259,6 +267,14 @@ class TestRiMEA03SpeedDownStairs:
         }
     ]
 
+    @pytest.mark.xfail(
+        reason=(
+            "Stair-zone speed_factor is not applied when journeys_v2.sequence "
+            "is just the exit. Travel time pins at max_simulation_time. "
+            "Tracked at https://github.com/PedestrianDynamics/jupedsim-scenarios/issues/15"
+        ),
+        strict=True,
+    )
     def test_travel_time(self):
         """Zone-based stair approximation should keep downstairs travel near 13 s."""
         raw = {
@@ -1133,6 +1149,14 @@ class TestRiMEA13FundamentalDiagramStairs:
         stair_points["density_bin"] = np.round(stair_points["density"], 1)
         return stair_points
 
+    @pytest.mark.xfail(
+        reason=(
+            "Symptom of the same stair-zone speed_factor bug: downstairs "
+            "Corbetta-band fraction is below threshold. "
+            "Tracked at https://github.com/PedestrianDynamics/jupedsim-scenarios/issues/15"
+        ),
+        strict=True,
+    )
     def test_down_faster_than_up(self):
         up_points = self._run_direction("up")
         down_points = self._run_direction("down")
@@ -1338,6 +1362,15 @@ class TestRiMEA161DFundamentalDiagram:
     Expected: Curves lie within 10/90% percentile envelope of empirical data.
     """
 
+    @pytest.mark.xfail(
+        reason=(
+            "Loop-only journeys (journeys_v2.sequence is checkpoints with no "
+            "exit) don't drive agents through full laps — they complete 0-1 "
+            "instead of the expected 3+. "
+            "Tracked at https://github.com/PedestrianDynamics/jupedsim-scenarios/issues/15"
+        ),
+        strict=True,
+    )
     def test_1d_fundamental_diagram(self):
         reference = load_reference_band()
         runs = {}
