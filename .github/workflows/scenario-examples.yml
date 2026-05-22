@@ -19,5 +19,5 @@ jobs:
         run: uv sync --extra dev
 
       - name: Run shared scenario examples
-        working-directory: scripts
+        working-directory: standards
         run: uv run --project .. pytest test_shared_examples.py -q

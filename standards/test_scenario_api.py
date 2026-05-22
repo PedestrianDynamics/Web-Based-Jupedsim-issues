@@ -5,11 +5,11 @@ import pytest
 from jupedsim_scenarios import load_scenario
 
 
-SCENARIOS_DIR = Path(__file__).resolve().parent / "scenarios"
+STANDARDS_DIR = Path(__file__).resolve().parent
 
 
 def test_runtime_mutators_keep_raw_config_in_sync():
-    scenario = load_scenario(str(SCENARIOS_DIR / "general" / "bottleneck-zone"))
+    scenario = load_scenario(str(STANDARDS_DIR / "general" / "scenario_files" / "bottleneck-zone"))
 
     scenario.set_seed(123)
     scenario.set_max_time(456)
@@ -30,7 +30,7 @@ def test_runtime_mutators_keep_raw_config_in_sync():
 
 
 def test_agent_param_aliases_are_mirrored_consistently():
-    scenario = load_scenario(str(SCENARIOS_DIR / "general" / "bottleneck-zone"))
+    scenario = load_scenario(str(STANDARDS_DIR / "general" / "scenario_files" / "bottleneck-zone"))
 
     scenario.set_agent_params(
         0,
@@ -51,8 +51,8 @@ def test_agent_param_aliases_are_mirrored_consistently():
 
 
 def test_index_based_zone_and_stage_mutators_hit_expected_objects():
-    zone_scenario = load_scenario(str(SCENARIOS_DIR / "general" / "bottleneck-zone"))
-    waiting_scenario = load_scenario(str(SCENARIOS_DIR / "general" / "waiting-stage-corridor"))
+    zone_scenario = load_scenario(str(STANDARDS_DIR / "general" / "scenario_files" / "bottleneck-zone"))
+    waiting_scenario = load_scenario(str(STANDARDS_DIR / "general" / "scenario_files" / "waiting-stage-corridor"))
 
     zone_scenario.set_zone_speed_factor(0, 0.42)
     waiting_scenario.set_checkpoint_waiting_time(0, 8.5)
@@ -64,7 +64,7 @@ def test_index_based_zone_and_stage_mutators_hit_expected_objects():
 
 
 def test_copy_supports_safe_overrides_without_mutating_original():
-    scenario = load_scenario(str(SCENARIOS_DIR / "general" / "bottleneck-zone"))
+    scenario = load_scenario(str(STANDARDS_DIR / "general" / "scenario_files" / "bottleneck-zone"))
 
     variant = scenario.copy(
         source_path="variant",
@@ -80,7 +80,7 @@ def test_copy_supports_safe_overrides_without_mutating_original():
 
 
 def test_flow_schedule_can_be_attached_to_existing_distribution():
-    scenario = load_scenario(str(SCENARIOS_DIR / "general" / "bottleneck-zone"))
+    scenario = load_scenario(str(STANDARDS_DIR / "general" / "scenario_files" / "bottleneck-zone"))
 
     scenario.set_agent_count(0, 9)
     scenario.set_flow_schedule(
@@ -112,14 +112,14 @@ def test_flow_schedule_can_be_attached_to_existing_distribution():
     ],
 )
 def test_invalid_agent_param_aliases_raise_clear_errors(kwargs, message):
-    scenario = load_scenario(str(SCENARIOS_DIR / "general" / "bottleneck-zone"))
+    scenario = load_scenario(str(STANDARDS_DIR / "general" / "scenario_files" / "bottleneck-zone"))
 
     with pytest.raises(ValueError, match=message):
         scenario.set_agent_params(0, **kwargs)
 
 
 def test_invalid_flow_schedule_entries_raise_clear_errors():
-    scenario = load_scenario(str(SCENARIOS_DIR / "general" / "bottleneck-zone"))
+    scenario = load_scenario(str(STANDARDS_DIR / "general" / "scenario_files" / "bottleneck-zone"))
 
     with pytest.raises(ValueError, match="start/end time and number"):
         scenario.set_flow_schedule(0, [{"start_time_s": 0, "end_time_s": 5}])

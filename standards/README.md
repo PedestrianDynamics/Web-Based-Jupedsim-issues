@@ -38,7 +38,7 @@ Create venv and install dependencies:
 ```bash
 cd ..
 uv sync --extra dev
-cd scripts
+cd standards
 ```
 
 Run Jupyter directly:
@@ -74,7 +74,7 @@ print(f"All evacuated: {result.agents_remaining == 0}")
 You can also load one of the repository examples directly:
 
 ``` python
-scenario = load_scenario("scenarios/general/bottleneck-zone")
+scenario = load_scenario("general/scenario_files/bottleneck-zone")
 ```
 
 ------------------------------------------------------------------------
@@ -151,14 +151,14 @@ scenario:
 ``` python
 from copy import deepcopy
 
-base = load_scenario("scenarios/general/bottleneck-zone")
+base = load_scenario("general/scenario_files/bottleneck-zone")
 
 variant_raw = deepcopy(base.raw)
 variant_raw["zones"]["jps-zones_0"]["speed_factor"] = 0.5
 ```
 
 This pattern is used in
-[`bottleneck_zone_nt_diagram.ipynb`](bottleneck_zone_nt_diagram.ipynb) so the
+[`bottleneck_zone_nt_diagram.ipynb`](general/bottleneck_zone_nt_diagram.ipynb) so the
 baseline and modified runs do not accidentally share mutated nested dictionaries.
 
 ------------------------------------------------------------------------
@@ -256,7 +256,7 @@ PedPy supports:
 Documentation:\
 https://pedpy.readthedocs.io
 
-See also [`bottleneck_zone_nt_diagram.ipynb`](bottleneck_zone_nt_diagram.ipynb)
+See also [`bottleneck_zone_nt_diagram.ipynb`](general/bottleneck_zone_nt_diagram.ipynb)
 for a complete example that compares two zone speed factors side by side with an
 $N-T$ diagram.
 
@@ -341,8 +341,12 @@ for model in models:
 
     .
     ├── core/
-    ├── bottleneck_zone_nt_diagram.ipynb
-    ├── scenarios/
+    ├── general/
+    │   ├── bottleneck_zone_nt_diagram.ipynb (and other demos)
+    ├── rimea/
+    │   ├── rimea07_demographic_params.ipynb (and other RiMEA notebooks)
+    │   └── scenario_builders/
+    ├── <standard>/scenario_files/
     └── ../pyproject.toml
 
     
@@ -350,6 +354,6 @@ for model in models:
 |------|-------------|
 | `core/scenario.py` | Reusable scenario loading and simulation interface |
 | `core/__init__.py` | Public imports for the reusable scenario module |
-| `bottleneck_zone_nt_diagram.ipynb` | Example notebook comparing bottleneck zone variants with an $N$-$T$ diagram |
-| `scenarios/` | Example scenario directories and exported inputs for local runs |
+| `general/bottleneck_zone_nt_diagram.ipynb` | Example notebook comparing bottleneck zone variants with an $N$-$T$ diagram |
+| `<standard>/scenario_files/` | Example scenario directories and exported inputs for local runs |
 | `../pyproject.toml` | Root Python project and shared dependency definition managed with `uv` |
