@@ -74,7 +74,7 @@ print(f"All evacuated: {result.agents_remaining == 0}")
 You can also load one of the repository examples directly:
 
 ``` python
-scenario = load_scenario("scenarios/bottleneck-zone")
+scenario = load_scenario("scenarios/general/bottleneck-zone")
 ```
 
 ------------------------------------------------------------------------
@@ -151,7 +151,7 @@ scenario:
 ``` python
 from copy import deepcopy
 
-base = load_scenario("scenarios/bottleneck-zone")
+base = load_scenario("scenarios/general/bottleneck-zone")
 
 variant_raw = deepcopy(base.raw)
 variant_raw["zones"]["jps-zones_0"]["speed_factor"] = 0.5
