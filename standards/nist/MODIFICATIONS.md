@@ -71,6 +71,34 @@ Stripped semantics are preserved by:
   removed semantics through whatever loader API exists. The mapping from
   removed key to expected notebook behaviour will be in the notebook prose.
 
+### A4. Journey schema upgrade: `journeys_v2` + `journey_weights`
+
+The JuPedSim web app exports the legacy `journeys` / `stages` schema. The
+canonical `jupedsim_scenarios` loader, however, only enforces route
+allocation when the ZIP also contains a `journeys_v2` block (with
+`id` / `name` / `color` / `sequence`) plus per-distribution
+`journey_weights`. When only legacy `journeys` is present the loader
+falls back to nearest-exit routing, which silently misroutes agents in
+multi-exit scenarios (notably Verif.3.1, where 2/23 agents from Room 10
+went to the secondary exit instead of their allocated main exit).
+
+Every ZIP in this contribution therefore ships **both schemas**:
+
+- The original `journeys` / `stages` block is preserved (web-app export
+  shape).
+- A derived `journeys_v2` block is added at conversion time: each
+  journey's `sequence` is the legacy `stages` list with the originating
+  distribution removed. Each distribution gets a
+  `journey_weights: [{journey_id: ..., weight: 100}]` entry tagging it
+  to its single journey.
+
+With this dual-schema ZIP the canonical loader enforces the NIST-allocated
+routes strictly (verified: 23/23 agents reach their allocated exit on
+Verif.3.1). The legacy block keeps the ZIP round-trippable through the
+web app.
+
+See `_staging/convert.py::clean_config` for the synthesis code.
+
 ## B. Per-scenario modifications
 
 ### B1. Verif.1.1 — Pre-evacuation time distributions
