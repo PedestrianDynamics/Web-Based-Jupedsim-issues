@@ -179,8 +179,10 @@ class TestRiMEA02SpeedUpStairs:
 
     @pytest.mark.xfail(
         reason=(
-            "Stair-zone speed_factor is not applied when journeys_v2.sequence "
-            "is just the exit. Travel time pins at max_simulation_time. "
+            "v2 routing's arrival waypoint lands at x=10.293, outside the "
+            "5 cm-wide exit polygon (x in [10.35, 10.40]). Agent stops short "
+            "and never despawns; evacuation_time pins at max_simulation_time. "
+            "Zone speed_factor itself is applied correctly (10 m / 20 s = 0.5 m/s). "
             "Tracked at https://github.com/PedestrianDynamics/jupedsim-scenarios/issues/15"
         ),
         strict=True,
@@ -271,8 +273,9 @@ class TestRiMEA03SpeedDownStairs:
 
     @pytest.mark.xfail(
         reason=(
-            "Stair-zone speed_factor is not applied when journeys_v2.sequence "
-            "is just the exit. Travel time pins at max_simulation_time. "
+            "Same waypoint-outside-exit-polygon issue as RiMEA02: agent "
+            "reaches the navmesh arrival waypoint, which sits outside the "
+            "narrow exit polygon, and never despawns. "
             "Tracked at https://github.com/PedestrianDynamics/jupedsim-scenarios/issues/15"
         ),
         strict=True,
@@ -1153,8 +1156,10 @@ class TestRiMEA13FundamentalDiagramStairs:
 
     @pytest.mark.xfail(
         reason=(
-            "Symptom of the same stair-zone speed_factor bug: downstairs "
-            "Corbetta-band fraction is below threshold. "
+            "Downstream effect of the v2 arrival-waypoint bug: agents pile "
+            "up at the corridor end because none can cross into the narrow "
+            "exit polygon, distorting the stair FD and dragging the Corbetta "
+            "band fraction below threshold. "
             "Tracked at https://github.com/PedestrianDynamics/jupedsim-scenarios/issues/15"
         ),
         strict=True,
@@ -1366,9 +1371,10 @@ class TestRiMEA161DFundamentalDiagram:
 
     @pytest.mark.xfail(
         reason=(
-            "Loop-only journeys (journeys_v2.sequence is checkpoints with no "
-            "exit) don't drive agents through full laps — they complete 0-1 "
-            "instead of the expected 3+. "
+            "Likely same family as the v2 arrival-waypoint bug: agents reach "
+            "the navmesh waypoint for the next checkpoint but its position "
+            "may fall outside the checkpoint polygon, so the journey state "
+            "never advances and agents complete 0-1 laps instead of 3+. "
             "Tracked at https://github.com/PedestrianDynamics/jupedsim-scenarios/issues/15"
         ),
         strict=True,
