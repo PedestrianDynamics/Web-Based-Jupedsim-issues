@@ -33,6 +33,23 @@ for extra in (STANDARDS_DIR / "nist", STANDARDS_DIR):
 
 from jupedsim_scenarios import load_scenario, run_scenario  # noqa: E402
 
+
+def _load_builder(module_name: str):
+    """Load standards/nist/scenario_builders/<module_name>.py by explicit
+    file path. Avoids the package-name clash with
+    standards/rimea/scenario_builders/ when vv.yml runs both test modules
+    in the same pytest invocation (Python's import cache otherwise pins
+    `scenario_builders` to whichever test loaded it first)."""
+    import importlib.util
+
+    path = STANDARDS_DIR / "nist" / "scenario_builders" / f"{module_name}.py"
+    spec = importlib.util.spec_from_file_location(f"_nist_{module_name}", path)
+    mod = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(mod)
+    return mod
+
+
 pytestmark = [
     pytest.mark.vv,
     pytest.mark.skipif(
@@ -82,7 +99,7 @@ class TestNist11Premovement:
 
     @pytest.mark.parametrize("case_id", ["uniform", "gamma", "lognormal", "weibull"])
     def test_distribution_fits(self, case_id):
-        from scenario_builders.nist1_1_premovement import build_variants
+        build_variants = _load_builder("nist1_1_premovement").build_variants
         from scipy import stats as _stats
 
         base = _load("Nist-1-1-premovement")
@@ -278,7 +295,7 @@ class TestNist28Counterflow:
     BUDGET_BY_CF = {0: 400, 10: 500, 50: 400, 100: 400}
 
     def test_evacuated_counts_monotonic(self):
-        from scenario_builders.nist2_8_counterflow import load_branches
+        load_branches = _load_builder("nist2_8_counterflow").load_branches
 
         evacuated_counts = []
         for branch in load_branches():
