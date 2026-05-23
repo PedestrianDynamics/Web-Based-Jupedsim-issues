@@ -367,12 +367,13 @@ class TestNist31RouteAllocation:
     section B12.
     """
 
-    def test_majority_reach_allocated_exit(self):
-        """JuPedSim CollisionFreeSpeedModel routes agents toward the nearest
-        reachable exit rather than strictly enforcing the journey stages
-        mapping. We require at least 80% of agents to still follow their
-        allocated route; the soft threshold is documented in
-        MODIFICATIONS.md.
+    def test_each_agent_reaches_allocated_exit(self):
+        """Every agent must end at the exit allocated by its journey. The
+        ZIP carries both the legacy `journeys`/`stages` block (web-app
+        export shape) and a derived `journeys_v2` + `journey_weights`
+        block (the canonical loader's required shape); the latter is
+        what makes the canonical loader enforce route allocation
+        strictly. See MODIFICATIONS.md section A4.
         """
         scenario = _load("Nist-3-1-route-allocation")
         journey_map = {
@@ -419,8 +420,8 @@ class TestNist31RouteAllocation:
                         f"expected {expected}, got {actual}"
                     )
             match_rate = matches / total if total else 0.0
-            assert match_rate >= 0.8, (
-                f"allocation match rate {match_rate:.1%} below 80%\n"
+            assert match_rate == 1.0, (
+                f"allocation match rate {match_rate:.1%} below 100%\n"
                 + "\n".join(mismatches[:5])
             )
         finally:
