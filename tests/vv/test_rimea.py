@@ -137,12 +137,15 @@ class TestRiMEA02SpeedUpStairs:
     EXIT = {
         "jps-exits_0": {
             "type": "polygon",
+            # Exit deliberately widened to 20 cm (was 5 cm) so the
+            # direct-steering arrival waypoint lands inside the polygon.
+            # See jupedsim-scenarios#15.
             "coordinates": [
-                [10.35, 0.8],
+                [10.20, 0.8],
                 [10.4, 0.8],
                 [10.4, 1.2],
-                [10.35, 1.2],
-                [10.35, 0.8],
+                [10.20, 1.2],
+                [10.20, 0.8],
             ],
         }
     }
@@ -177,16 +180,6 @@ class TestRiMEA02SpeedUpStairs:
         }
     ]
 
-    @pytest.mark.xfail(
-        reason=(
-            "v2 routing's arrival waypoint lands at x=10.293, outside the "
-            "5 cm-wide exit polygon (x in [10.35, 10.40]). Agent stops short "
-            "and never despawns; evacuation_time pins at max_simulation_time. "
-            "Zone speed_factor itself is applied correctly (10 m / 20 s = 0.5 m/s). "
-            "Tracked at https://github.com/PedestrianDynamics/jupedsim-scenarios/issues/15"
-        ),
-        strict=True,
-    )
     def test_travel_time(self):
         """Zone-based stair approximation should keep the slowed 10 m run near 20 s."""
         raw = {
@@ -215,8 +208,9 @@ class TestRiMEA02SpeedUpStairs:
             evac = result.evacuation_time
             result.cleanup()
 
-        assert 18.8 <= evac <= 19.6, (
-            f"Stair-zone travel time {evac:.2f}s outside expected range [18.8, 19.6]"
+        # ~10 m corridor at v0 * speed_factor = 0.5 m/s -> ~20 s.
+        assert 19.5 <= evac <= 20.5, (
+            f"Stair-zone travel time {evac:.2f}s outside expected range [19.5, 20.5]"
         )
 
 
@@ -231,12 +225,15 @@ class TestRiMEA03SpeedDownStairs:
     EXIT = {
         "jps-exits_0": {
             "type": "polygon",
+            # Exit deliberately widened to 20 cm (was 5 cm) so the
+            # direct-steering arrival waypoint lands inside the polygon.
+            # See jupedsim-scenarios#15.
             "coordinates": [
-                [10.35, 0.8],
+                [10.20, 0.8],
                 [10.4, 0.8],
                 [10.4, 1.2],
-                [10.35, 1.2],
-                [10.35, 0.8],
+                [10.20, 1.2],
+                [10.20, 0.8],
             ],
         }
     }
@@ -271,15 +268,6 @@ class TestRiMEA03SpeedDownStairs:
         }
     ]
 
-    @pytest.mark.xfail(
-        reason=(
-            "Same waypoint-outside-exit-polygon issue as RiMEA02: agent "
-            "reaches the navmesh arrival waypoint, which sits outside the "
-            "narrow exit polygon, and never despawns. "
-            "Tracked at https://github.com/PedestrianDynamics/jupedsim-scenarios/issues/15"
-        ),
-        strict=True,
-    )
     def test_travel_time(self):
         """Zone-based stair approximation should keep downstairs travel near 13 s."""
         raw = {
@@ -308,8 +296,9 @@ class TestRiMEA03SpeedDownStairs:
             evac = result.evacuation_time
             result.cleanup()
 
-        assert 12.6 <= evac <= 13.1, (
-            f"Stair-zone travel time {evac:.2f}s outside expected range [12.6, 13.1]"
+        # ~10 m corridor at v0 * speed_factor = 0.75 m/s -> ~13.3 s.
+        assert 13.0 <= evac <= 13.7, (
+            f"Stair-zone travel time {evac:.2f}s outside expected range [13.0, 13.7]"
         )
 
 
