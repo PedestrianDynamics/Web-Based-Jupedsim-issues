@@ -242,6 +242,11 @@ def build_loop_scenario(
         ordered_checkpoints = (
             checkpoint_ids[first_checkpoint_index:] + checkpoint_ids[:first_checkpoint_index]
         )
+        # journeys_v2 sequences don't auto-cycle: once the agent reaches the
+        # final stage, advance_path_target sets state="done" and the agent
+        # stops. Replicate the lap to keep agents moving for the measurement
+        # window (Rimea 16 needs >= 3 laps).
+        ordered_checkpoints = ordered_checkpoints * 5
         distributions[distribution_id] = {
             "coordinates": _square(x_pos, y_pos, agent_radius + 0.04),
             "parameters": {

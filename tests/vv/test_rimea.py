@@ -1362,16 +1362,6 @@ class TestRiMEA161DFundamentalDiagram:
     Expected: Curves lie within 10/90% percentile envelope of empirical data.
     """
 
-    @pytest.mark.xfail(
-        reason=(
-            "Likely same family as the v2 arrival-waypoint bug: agents reach "
-            "the navmesh waypoint for the next checkpoint but its position "
-            "may fall outside the checkpoint polygon, so the journey state "
-            "never advances and agents complete 0-1 laps instead of 3+. "
-            "Tracked at https://github.com/PedestrianDynamics/jupedsim-scenarios/issues/15"
-        ),
-        strict=True,
-    )
     def test_1d_fundamental_diagram(self):
         reference = load_reference_band()
         runs = {}
