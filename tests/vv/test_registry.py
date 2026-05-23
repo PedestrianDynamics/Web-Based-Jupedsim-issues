@@ -37,4 +37,16 @@ TEST_MAP = {
     "TestRiMEA14": ("RiMEA-14 Route Choice", "RiMEA 4.1.1 Test 14", "Document short vs long route preference"),
     "TestRiMEA15": ("RiMEA-15 Large Crowd Corner", "RiMEA 4.1.1 Test 15", "Corner slows evacuation vs straight path"),
     "TestRiMEA16": ("RiMEA-16 1D Fund. Diagram", "RiMEA 4.1.1 Test 16", "1D speed-density within empirical envelope"),
+    # NIST TN 1822 tests
+    "TestNist11Premovement": ("NIST-1.1 Pre-evacuation Distributions", "NIST TN 1822 Verif.1.1", "KS p > 0.05 for uniform/gamma/lognormal/weibull"),
+    "TestNist21CorridorSpeed": ("NIST-2.1 Corridor Speed", "NIST TN 1822 Verif.2.1", "Walking speed within 1.0 +/- 0.05 m/s over 40 m segment"),
+    "TestNist22StairsUp": ("NIST-2.2 Stairs Up", "NIST TN 1822 Verif.2.2", "Stair speed within 1.0 +/- 0.05 m/s upward over 100 m segment"),
+    "TestNist22StairsDown": ("NIST-2.2 Stairs Down", "NIST TN 1822 Verif.2.2", "Stair speed within 1.0 +/- 0.05 m/s downward over 100 m segment"),
+    "TestNist23Corner": ("NIST-2.3 Corner", "NIST TN 1822 Verif.2.3", "All 20 agents evacuate; no boundary penetration"),
+    "TestNist24Demographics": ("NIST-2.4 Demographics", "NIST TN 1822 Verif.2.4", "Gaussian(1.2, 0.2) desired-speed distribution configured"),
+    "TestNist28Counterflow": ("NIST-2.8 Counterflow", "NIST TN 1822 Verif.2.8", "Primary evacuated count non-increasing in counterflow population"),
+    "TestNist29Groups": ("NIST-2.9 Groups", "NIST TN 1822 Verif.2.9", "Scenario loads and runs (native group cohesion absent)"),
+    "TestNist31RouteAllocation": ("NIST-3.1 Route Allocation", "NIST TN 1822 Verif.3.1", "Each of 23 agents reaches the exit allocated by its journey"),
+    "TestNist51Congestion": ("NIST-5.1 Congestion", "NIST TN 1822 Verif.5.1", "Peak density at room exit > peak density in corridor"),
+    "TestNist52MaxFlow": ("NIST-5.2 Max Flow", "NIST TN 1822 Verif.5.2", "Mode B: emergent flow finite and positive (1.33 p/m/s informational)"),
 }

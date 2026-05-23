@@ -1,0 +1,92 @@
+"""
+NIST TN 1822 Verif.1.1 - Pre-evacuation time distributions.
+
+Thin wrapper around the upstream ``standards/utils/premovement_distributions``
+module, which already ships the four NIST distributions and their canonical
+parameters as ``PREMOVEMENT_PRESETS``. The base ZIP (Nist-1-1-premovement.zip)
+ships the uniform case as the default; ``build_variants`` yields the three
+other cases.
+
+Source: NIST TN 1822 section 3.1.1 (Verif.1.1).
+"""
+from __future__ import annotations
+
+import sys
+from copy import deepcopy
+from dataclasses import dataclass
+from pathlib import Path
+
+# standards/utils is two levels up from standards/nist/scenario_builders/.
+_UTILS_PARENT = Path(__file__).resolve().parents[2]
+if str(_UTILS_PARENT) not in sys.path:
+    sys.path.insert(0, str(_UTILS_PARENT))
+
+from utils.premovement_distributions import (  # type: ignore  # noqa: E402
+    create_premovement_distribution,
+)
+
+DISTRIBUTION_ID = "jps-distributions_0"
+
+# NIST TN 1822 section 3.1.1 parameters - hard-coded so we never depend on
+# upstream PREMOVEMENT_PRESETS defaults (which use U(0, 60) for uniform,
+# not NIST's U(10, 100)). Gamma/lognormal/weibull defaults DO match NIST
+# but we list them explicitly for traceability.
+NIST_CASES = {
+    "uniform":   {"a": 10.0,    "b": 100.0,   "max_time_s": 180},
+    "gamma":     {"a": 1.291,   "b": 103.901, "max_time_s": 1200},
+    "lognormal": {"a": 4.586,   "b": 0.967,   "max_time_s": 2400},
+    "weibull":   {"a": 139.285, "b": 1.195,   "max_time_s": 1200},
+}
+
+
+@dataclass(frozen=True)
+class PreEvacCase:
+    name: str
+    params: dict
+    max_simulation_time_s: int
+
+    @property
+    def param_a(self) -> float:
+        return float(self.params["a"])
+
+    @property
+    def param_b(self) -> float:
+        return float(self.params["b"])
+
+
+def load_cases() -> list[PreEvacCase]:
+    """Return the four NIST pre-evac cases with the parameters from TN 1822."""
+    return [
+        PreEvacCase(
+            name=name,
+            params={"a": spec["a"], "b": spec["b"]},
+            max_simulation_time_s=spec["max_time_s"],
+        )
+        for name, spec in NIST_CASES.items()
+    ]
+
+
+def build_variants(base_scenario):
+    """Yield (case, scenario) - one per NIST distribution.
+
+    The base scenario is deep-copied for each case so the loaded ZIP is never
+    mutated in place. ``set_agent_params`` is the documented loader API for
+    overriding distribution parameters.
+    """
+    for case in load_cases():
+        variant = deepcopy(base_scenario)
+        variant.set_agent_params(
+            DISTRIBUTION_ID,
+            use_premovement=True,
+            premovement_distribution=case.name,
+            premovement_param_a=case.param_a,
+            premovement_param_b=case.param_b,
+        )
+        variant.set_max_time(case.max_simulation_time_s)
+        yield case, variant
+
+
+def sample_reference(case: PreEvacCase, n: int, seed: int):
+    """Sample n times from the case's analytic distribution (for fit-overlay plots)."""
+    dist = create_premovement_distribution(case.name, case.params, seed=seed)
+    return dist.sample(n)

@@ -1,0 +1,5 @@
+label,scenario_zip,counterflow_agents,primary_agents,expected_trend
+counterflow=0,scenario_files/Nist-2-8-counterflow-0.zip,0,100,baseline travel time for room-1 agents
+counterflow=10,scenario_files/Nist-2-8-counterflow-10.zip,10,100,room-1 agent travel time greater than baseline
+counterflow=50,scenario_files/Nist-2-8-counterflow-50.zip,50,100,room-1 agent travel time greater than counterflow=10
+counterflow=100,scenario_files/Nist-2-8-counterflow-100.zip,100,100,room-1 agent travel time greater than counterflow=50
