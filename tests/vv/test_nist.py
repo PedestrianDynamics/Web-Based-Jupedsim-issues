@@ -43,9 +43,13 @@ def _load_builder(module_name: str):
     import importlib.util
 
     path = STANDARDS_DIR / "nist" / "scenario_builders" / f"{module_name}.py"
-    spec = importlib.util.spec_from_file_location(f"_nist_{module_name}", path)
+    synthetic_name = f"_nist_{module_name}"
+    spec = importlib.util.spec_from_file_location(synthetic_name, path)
     mod = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
+    # Register before exec so @dataclass (which looks the module up in
+    # sys.modules via __module__) can attach the class correctly.
+    sys.modules[synthetic_name] = mod
     spec.loader.exec_module(mod)
     return mod
 
