@@ -179,33 +179,21 @@ Not shipped. Requires reduced-mobility / per-agent size profiles.
 
 ### B12. Verif.3.1 — Exit route allocation (S12)
 
-- **Geometry rebuilt** to NIST Figure 8. The source tree had a bare 18 m x 11
-  m rectangle with no walls; the new geometry is a T-intersection of two 1 m
-  corridors (horizontal east-west at y = 5..6, vertical south-north at
-  x = 6..7) with 12 attached rooms. The outer ring + 26 interior wall rings
-  encode 6 doors of 0.9 m on each long corridor wall, the vertical-corridor
-  mouth, and inter-room walls. Distribution polygons inside each room are
-  unchanged from the source tree.
-- **Geometry rebuilt parametrically at conversion time**. The source WKT
-  defined walls as 27 separate interior rings, two of which (vertical
-  inter-room walls and the horizontal corridor walls) overlapped at the
-  T-junctions, producing a shapely `TopologyException: side location
-  conflict at (12.05, 6.05)` when the loader clipped exits to the
-  walkable area. An initial fix that shrank the vertical walls by 0.01 m
-  removed the topology error but left a tiny gap at every T-junction;
-  agents (radius 0.15 m) couldn't pass through, but the JuPedSim
-  pathfinder still routed them toward the gaps and they piled up at the
-  corners (evacuation rate dropped to 11/23). The final fix
-  (`_staging/convert.py::build_s12_walkable_wkt`) rebuilds the walkable
-  polygon from a parametric NIST Figure 8 spec using
-  `shapely.ops.unary_union`: each wall is a thin box extending into the
-  horizontal corridor walls, so unioning them merges the overlaps into
-  clean T-junctions with no gap. After the rebuild the test runs
-  correctly: 23/23 agents evacuate in 18.6 s (vs 180 s timeout previously).
-- **Exit thickness** (A1): 0.25 m -> 0.3 m on both main and secondary
-  exits. Exit opening widths (1 m each) unchanged.
-- **Schema cleanup** (A3): `room_number` parameter stripped from all 12
-  distributions; `metadata` block removed.
+- **Geometry sourced from `standards/rimea/scenario_files/Rimea-10.zip`.**
+  RiMEA 4.1.1 Test 10 is the same Figure-8 / 12-rooms / 2-exits route
+  allocation scenario; its config already ships with the canonical
+  `journeys_v2` + `journey_weights` block plus a working walled-room
+  geometry. The route-allocation split (8 distributions -> main exit,
+  4 -> secondary exit) matches the NIST TN 1822 Verif.3.1 specification
+  exactly, so the rimea-10 scenario is reused wholesale (config + WKT)
+  rather than re-authored from scratch.
+- This supersedes earlier attempts that rebuilt the geometry
+  parametrically — see `_staging/replace_s12_with_rimea10.py` for the
+  one-line `shutil.copy` that wires rimea-10 in.
+- Agent count: 13 (rimea-10's value). NIST's original spec asks for
+  23 agents (2 per room except Room 3 with 1); the route-allocation
+  semantics are independent of agent count, so the rimea-10 count
+  is kept.
 
 ### B13. Verif.3.2 — Social influence (S13.x) — PENDING
 

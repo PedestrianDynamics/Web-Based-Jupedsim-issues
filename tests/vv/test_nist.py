@@ -376,9 +376,20 @@ class TestNist31RouteAllocation:
         strictly. See MODIFICATIONS.md section A4.
         """
         scenario = _load("Nist-3-1-route-allocation")
-        journey_map = {
-            j["stages"][0]: j["stages"][-1] for j in scenario.raw["journeys"]
-        }
+        raw = scenario.raw
+        if "journeys" in raw:
+            journey_map = {
+                j["stages"][0]: j["stages"][-1] for j in raw["journeys"]
+            }
+        else:
+            j_to_exit = {
+                j["id"]: j["sequence"][-1] for j in raw.get("journeys_v2", [])
+            }
+            journey_map = {}
+            for did, d in scenario.distributions.items():
+                jw = d.get("journey_weights", [])
+                if jw:
+                    journey_map[did] = j_to_exit.get(jw[0]["journey_id"], "")
         dist_polys = {
             did: Polygon(d["coordinates"])
             for did, d in scenario.distributions.items()
