@@ -3,6 +3,8 @@
 [![ISO Tests](https://img.shields.io/badge/ISO%20Tests-planned-lightgrey)](https://github.com/PedestrianDynamics/jupedsim-web-community/issues)
 [![Docker Pulls](https://img.shields.io/docker/pulls/jupedsim/jupedsim-web)](https://hub.docker.com/r/jupedsim/jupedsim-web)
 [![Docker Image Version](https://img.shields.io/docker/v/jupedsim/jupedsim-web?sort=semver&label=docker%20tag)](https://hub.docker.com/r/jupedsim/jupedsim-web/tags)
+[![jupedsim on PyPI](https://img.shields.io/pypi/v/jupedsim?label=jupedsim)](https://pypi.org/project/jupedsim/)
+[![jupedsim-scenarios on PyPI](https://img.shields.io/pypi/v/jupedsim-scenarios?label=jupedsim-scenarios)](https://pypi.org/project/jupedsim-scenarios/)
 
 [![Watch on YouTube](https://img.youtube.com/vi/MGj0Nyumdms/0.jpg)](https://www.youtube.com/watch?v=MGj0Nyumdms)
 
