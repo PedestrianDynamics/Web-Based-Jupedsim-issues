@@ -22,6 +22,12 @@ jobs:
       - name: Sync environment
         run: uv sync
 
+      - name: Upgrade jupedsim-scenarios to latest release
+        # The notebook CI exists to catch API drift in jupedsim-scenarios;
+        # uv.lock pins an older version, so override it on every run to
+        # test against whatever is currently published on PyPI.
+        run: uv sync --upgrade-package jupedsim-scenarios
+
       - name: Execute notebooks
         run: |
           set -e
