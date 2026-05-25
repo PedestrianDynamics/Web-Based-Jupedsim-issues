@@ -49,8 +49,8 @@ def build_distribution_specs(direction: str) -> list[dict]:
     if direction not in STAIR_ZONE_SPEED_FACTORS:
         raise ValueError(f"Unknown direction: {direction}")
 
-    x0s = np.linspace(0.3, 8.8, 10)
-    y0s = np.linspace(0.3, 8.8, 10)
+    x0s = np.linspace(0.75, 8.75, 10)
+    y0s = np.linspace(0.75, 8.75, 10)
     cells = [(x, y) for y in y0s for x in x0s]
 
     specs = []
