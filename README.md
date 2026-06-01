@@ -61,8 +61,10 @@ Start here:
 
 - [standards/README.md](standards/README.md)
 - [standards/rimea/scenario_builders/](standards/rimea/scenario_builders/)
-- [standards/general/scenario_files/](standards/general/scenario_files/)
-- [standards/general/bottleneck_zone_nt_diagram.ipynb](standards/general/bottleneck_zone_nt_diagram.ipynb)
+
+> General scenario-scripting examples (loading, sweeping, plotting) live upstream in the
+> [jupedsim-scenarios cookbook](https://github.com/PedestrianDynamics/jupedsim-scenarios/tree/main/examples).
+> This repository keeps only the standards-specific notebooks (RiMEA, etc.).
 
 ## Repository Layout
 

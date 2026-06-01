@@ -156,9 +156,10 @@ variant_raw = deepcopy(base.raw)
 variant_raw["zones"]["jps-zones_0"]["speed_factor"] = 0.5
 ```
 
-This pattern is used in
-[`bottleneck_zone_nt_diagram.ipynb`](general/bottleneck_zone_nt_diagram.ipynb) so the
-baseline and modified runs do not accidentally share mutated nested dictionaries.
+This pattern is shown in the upstream
+[jupedsim-scenarios cookbook](https://github.com/PedestrianDynamics/jupedsim-scenarios/tree/main/examples/cookbook)
+(`bottleneck_zone_nt_diagram.ipynb`) so the baseline and modified runs do not
+accidentally share mutated nested dictionaries.
 
 ------------------------------------------------------------------------
 
@@ -255,9 +256,10 @@ PedPy supports:
 Documentation:\
 https://pedpy.readthedocs.io
 
-See also [`bottleneck_zone_nt_diagram.ipynb`](general/bottleneck_zone_nt_diagram.ipynb)
-for a complete example that compares two zone speed factors side by side with an
-$N-T$ diagram.
+See also the upstream
+[jupedsim-scenarios cookbook](https://github.com/PedestrianDynamics/jupedsim-scenarios/tree/main/examples/cookbook)
+(`bottleneck_zone_nt_diagram.ipynb`) for a complete example that compares two zone
+speed factors side by side with an $N-T$ diagram.
 
 ------------------------------------------------------------------------
 
@@ -341,7 +343,7 @@ for model in models:
     .
     ├── core/
     ├── general/
-    │   ├── bottleneck_zone_nt_diagram.ipynb (and other demos)
+    │   └── scenario_files/ (shared fixtures used by the API tests)
     ├── rimea/
     │   ├── rimea07_demographic_params.ipynb (and other RiMEA notebooks)
     │   └── scenario_builders/
@@ -353,6 +355,6 @@ for model in models:
 |------|-------------|
 | `core/scenario.py` | Reusable scenario loading and simulation interface |
 | `core/__init__.py` | Public imports for the reusable scenario module |
-| `general/bottleneck_zone_nt_diagram.ipynb` | Example notebook comparing bottleneck zone variants with an $N$-$T$ diagram |
+| `general/scenario_files/` | Shared scenario fixtures used by the API tests |
 | `<standard>/scenario_files/` | Example scenario directories and exported inputs for local runs |
 | `../pyproject.toml` | Root Python project and shared dependency definition managed with `uv` |
