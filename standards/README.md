@@ -92,19 +92,19 @@ scenario.set_agent_count("jps-distributions_0", 50)
 ### Simulation duration
 
 ``` python
-scenario.set_max_time(300)
+scenario.max_simulation_time = 300
 ```
 
 ### Random seed
 
 ``` python
-scenario.set_seed(123)
+scenario.seed = 123
 ```
 
 ### Switch simulation model
 
 ``` python
-scenario.set_model_type("GeneralizedCentrifugalForceModel")
+scenario.model_type = "GeneralizedCentrifugalForceModel"
 ```
 
 ### Adjust model parameters
@@ -325,7 +325,7 @@ models = [
 ]
 
 for model in models:
-    scenario.set_model_type(model)
+    scenario.model_type = model
 
     r = run_scenario(scenario)
 

@@ -59,14 +59,21 @@ def test_run_scenario_accepts_scenario_and_seed_kwarg():
 
 
 def test_scenario_class_exposes_used_methods():
+    # The ``set_seed`` / ``set_max_time`` / ``set_model_type`` methods were
+    # removed upstream in 0.5; this repo now assigns the attributes directly.
+    # ``seed`` / ``model_type`` are dataclass fields (only on instances),
+    # ``max_simulation_time`` is a property and ``set_model_params`` a method.
+    members = set(dir(jps.Scenario)) | set(
+        getattr(jps.Scenario, "__dataclass_fields__", {})
+    )
     required = {
-        "set_seed",
-        "set_max_time",
-        "set_model_type",
+        "seed",
+        "max_simulation_time",
+        "model_type",
         "set_model_params",
     }
-    missing = required - set(dir(jps.Scenario))
-    assert not missing, f"Scenario lost methods used by this repo: {missing}"
+    missing = required - members
+    assert not missing, f"Scenario lost members used by this repo: {missing}"
 
 
 def test_scenario_result_exposes_used_attrs():

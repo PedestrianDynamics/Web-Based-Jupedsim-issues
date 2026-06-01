@@ -889,7 +889,7 @@ wheels = [
 
 [[package]]
 name = "jupedsim-scenarios"
-version = "0.3.4"
+version = "0.6.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "joblib" },
@@ -899,9 +899,9 @@ dependencies = [
     { name = "pedpy" },
     { name = "shapely" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8e/bf/6ccb8b903db856b81d91f3b610457506241cf68a863907fd80bd62d19ea1/jupedsim_scenarios-0.3.4.tar.gz", hash = "sha256:28573a6e97eaf5294060ea91c030e37c1ef772987fdf07e12623483fe7d3ab38", size = 51736, upload-time = "2026-05-21T22:39:31.947Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b7/80/09621d47bf2e60798c08b9bfa103cce2ccf1735be7c52364e8d1719748e7/jupedsim_scenarios-0.6.4.1.tar.gz", hash = "sha256:369f14528649aa4fdfb0ab090f5c730a8ac86134f55e493f7c2a9a1b9bdf8685", size = 81845, upload-time = "2026-05-28T20:08:24.65Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b8/cc/41e868336886fe66222c16812f99b11c7f043c93df9d62ae269d07cf2f14/jupedsim_scenarios-0.3.4-py3-none-any.whl", hash = "sha256:be3429df0e5de4cfb774ef7a93cb28ac017ec47a4772522259fd1e896bb00394", size = 47944, upload-time = "2026-05-21T22:39:29.995Z" },
+    { url = "https://files.pythonhosted.org/packages/d1/de/8d1c96f4a8a94fd03598eea3fc7b1a5a0ff767d8ae01d06fc9c8ab736685/jupedsim_scenarios-0.6.4.1-py3-none-any.whl", hash = "sha256:d6dbf317c8a995ccc4399b4dd841e55e76230f590ea46605c95201eef331a97a", size = 62382, upload-time = "2026-05-28T20:08:23.412Z" },
 ]
 
 [[package]]
@@ -928,7 +928,7 @@ dev = [
 requires-dist = [
     { name = "ipykernel" },
     { name = "jupedsim" },
-    { name = "jupedsim-scenarios", specifier = ">=0.3.4" },
+    { name = "jupedsim-scenarios", specifier = ">=0.6.4" },
     { name = "jupyter" },
     { name = "numpy" },
     { name = "pandas" },
