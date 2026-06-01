@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -11,21 +12,24 @@ STANDARDS_DIR = Path(__file__).resolve().parents[1]
 def test_runtime_mutators_keep_raw_config_in_sync():
     scenario = load_scenario(str(STANDARDS_DIR / "general" / "scenario_files" / "bottleneck-zone"))
 
-    scenario.set_seed(123)
-    scenario.set_max_time(456)
-    scenario.set_model_type("GeneralizedCentrifugalForceModel")
+    scenario.seed = 123
+    scenario.max_simulation_time = 456
+    scenario.model_type = "GeneralizedCentrifugalForceModel"
     scenario.set_model_params(gcfm_strength_neighbor_repulsion=0.7)
 
-    settings = scenario.raw["config"]["simulation_settings"]
-    params = settings["simulationParams"]
-
+    # The public properties reflect the runtime mutations immediately.
     assert scenario.seed == 123
-    assert settings["baseSeed"] == 123
     assert scenario.max_simulation_time == 456
-    assert params["max_simulation_time"] == 456
     assert scenario.model_type == "GeneralizedCentrifugalForceModel"
-    assert params["model_type"] == "GeneralizedCentrifugalForceModel"
     assert scenario.sim_params["gcfm_strength_neighbor_repulsion"] == 0.7
+
+    # ``raw`` is mirrored lazily, so the serialized config carries the
+    # mutated values into the on-disk layout.
+    settings = json.loads(scenario.to_json())["config"]["simulation_settings"]
+    params = settings["simulationParams"]
+    assert settings["baseSeed"] == 123
+    assert params["max_simulation_time"] == 456
+    assert params["model_type"] == "GeneralizedCentrifugalForceModel"
     assert params["gcfm_strength_neighbor_repulsion"] == 0.7
 
 
@@ -66,11 +70,10 @@ def test_index_based_zone_and_stage_mutators_hit_expected_objects():
 def test_copy_supports_safe_overrides_without_mutating_original():
     scenario = load_scenario(str(STANDARDS_DIR / "general" / "scenario_files" / "bottleneck-zone"))
 
-    variant = scenario.copy(
-        source_path="variant",
-        walkable_area_wkt="POLYGON((0 0, 2 0, 2 1, 0 1, 0 0))",
-    )
-    variant.set_seed(77)
+    variant = scenario.copy()
+    variant.source_path = "variant"
+    variant.walkable_area_wkt = "POLYGON((0 0, 2 0, 2 1, 0 1, 0 0))"
+    variant.seed = 77
 
     assert scenario.source_path != "variant"
     assert scenario.seed != 77
@@ -106,9 +109,9 @@ def test_flow_schedule_can_be_attached_to_existing_distribution():
 @pytest.mark.parametrize(
     ("kwargs", "message"),
     [
-        ({"v0": -1.0}, "desired_speed/v0"),
-        ({"v0_std": -0.1}, "desired_speed_std/v0_std"),
-        ({"v0_distribution": "lognormal"}, "desired_speed_distribution/v0_distribution"),
+        ({"v0": -1.0}, "desired_speed"),
+        ({"v0_std": -0.1}, "desired_speed_std"),
+        ({"v0_distribution": "lognormal"}, "desired_speed_distribution"),
     ],
 )
 def test_invalid_agent_param_aliases_raise_clear_errors(kwargs, message):
