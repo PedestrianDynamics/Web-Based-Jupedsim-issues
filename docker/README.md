@@ -1,10 +1,8 @@
 # Run JuPedSim Web Locally (Docker)
 
-Two ways to run the simulator on your own machine, depending on how much control you want.
+The simulator ships as a single self-contained image: the frontend, both backends, and MongoDB in one container. No clone, no compose file, no `.env`, no OAuth setup.
 
-## Quick start — one container (self-host)
-
-The fastest path. Bundles the frontend, both backends, and MongoDB into a single image. No clone, no compose file, no `.env`, no OAuth setup.
+## Quick start
 
 ```bash
 docker run -d \
@@ -24,6 +22,19 @@ docker stop --timeout 60 jupedsim
 ```
 
 The `/data` volume holds MongoDB, scenario uploads, and the backend's SQLite state, so your scenarios survive `docker restart` and `docker rm`. Allow ~60 s on first start.
+
+## Use your own MongoDB (optional)
+
+Point `MONGODB_URI` at a managed/external MongoDB and the bundled `mongod` is not started:
+
+```bash
+docker run -d --name jupedsim -p 8080:8080 \
+  -v jupedsim-data:/data --memory 4g \
+  -e MONGODB_URI="mongodb+srv://user:pass@cluster.example.net/jupedsim-scenarios" \
+  jupedsim/jupedsim-web:latest
+```
+
+A loopback URI (`localhost` / `127.0.0.1`) keeps the bundled database, so a stray local value can't disable it by accident. Put any credentials in the URI.
 
 **Security note**: this image disables OAuth and serves every request as an anonymous "Local User". It's meant for local self-host. Do not expose port 8080 to the public internet.
 
