@@ -70,14 +70,17 @@ def build_variants(base_scenario):
     """
     for case in load_cases():
         variant = deepcopy(base_scenario)
-        variant.set_agent_params(
-            DISTRIBUTION_ID,
+        # set_agent_params()'s kwarg allow-list dropped the premovement_*
+        # keys, but simulation_init.py still reads them straight out of
+        # the distribution's raw parameters dict, so write there directly.
+        params = variant.raw["distributions"][DISTRIBUTION_ID]["parameters"]
+        params.update(
             use_premovement=True,
             premovement_distribution=case.name,
             premovement_param_a=case.param_a,
             premovement_param_b=case.param_b,
         )
-        variant.set_max_time(case.max_simulation_time_s)
+        variant.max_simulation_time = case.max_simulation_time_s
         yield case, variant
 
 

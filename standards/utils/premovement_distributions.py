@@ -35,6 +35,16 @@ class LognormalDistribution(PreMovementDistribution):
         return self.rng.lognormal(self.a, self.b, n_samples)
 
 
+class NormalDistribution(PreMovementDistribution):
+    def __init__(self, a: float = 60.0, b: float = 20.0, seed: Optional[int] = None):
+        super().__init__(seed)
+        self.a = a
+        self.b = b
+
+    def sample(self, n_samples: int) -> np.ndarray:
+        return self.rng.normal(self.a, self.b, n_samples)
+
+
 class WeibullDistribution(PreMovementDistribution):
     def __init__(self, a: float = 139.285, b: float = 1.195, seed: Optional[int] = None):
         super().__init__(seed)
@@ -65,6 +75,7 @@ def create_premovement_distribution(
     distributions = {
         "gamma": GammaDistribution,
         "lognormal": LognormalDistribution,
+        "normal": NormalDistribution,
         "weibull": WeibullDistribution,
         "uniform": UniformDistribution,
     }
@@ -91,6 +102,7 @@ def create_premovement_distribution(
 PREMOVEMENT_PRESETS = {
     "gamma": {"a": 1.291, "b": 103.901},
     "lognormal": {"a": 4.586, "b": 0.967},
+    "normal": {"a": 60.0, "b": 20.0},
     "weibull": {"a": 139.285, "b": 1.195},
     "uniform": {"a": 0.0, "b": 60.0},
 }
