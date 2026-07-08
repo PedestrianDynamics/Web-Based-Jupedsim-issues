@@ -18,7 +18,7 @@ GUI — the evacuation curve and the specific flow through the exit.
 | specific flow | 4.35 ped/(s·m), door width 1.0 m |
 
 The curve is straight over the congested phase → the 1 m door is the bottleneck
-and passes a constant flow (a textbook result; contrast the same room at 20–40
+and passes a constant flow (a textbook result; contrast the same room at 20
 agents, which is walk-time-limited at ~9.8 s and never saturates the door).
 
 The flow is computed two independent ways that agree: agent-removal times, and a
