@@ -33,12 +33,20 @@ The button only needs two things the stock image doesn't give it:
 The bridge already sends `Access-Control-Allow-Origin: *`, so the cross-origin
 call from `:8081` to `:8090` works without further changes.
 
-## Verify before relying on it (prototype caveats)
+Verified end-to-end against `jupedsim/jupedsim-web:latest`: button injected,
+scenario published through the bridge, and rendered in the viewer.
 
-- Confirm the button actually appears — if the app serves gzipped HTML from an
-  inner layer, `sub_filter` won't fire. Fix: the proxy already sends
-  `Accept-Encoding ""` upstream; verify with `curl -s localhost:8081/draw | grep __bridge`.
-- Confirm the stock image serves the SPA on `:8080` (the all-in-one image does;
-  the compose `frontend` service listens on `:80` — adjust `proxy_pass` if you
-  target that stack instead).
-- `docker compose down -v` to reset volumes.
+## Notes and troubleshooting
+
+- Button injection relies on `sub_filter`, which cannot rewrite a gzipped body;
+  the proxy sends `Accept-Encoding ""` upstream to prevent that. Confirm with
+  `curl -s localhost:8081/draw | grep __bridge`.
+- Targets the all-in-one image, which serves the SPA on `:8080`. The multi-service
+  `docker/docker-compose.yml` stack exposes `frontend` on `:80` — adjust
+  `proxy_pass` if you point the proxy at that instead.
+- **Viewer stuck on "Loading…" with `502` on `/api/*`**: the all-in-one backend
+  crashes on a full Docker disk (`OSError: [Errno 28] No space left on device`),
+  which looks like a proxy bug but isn't. Check `docker compose logs viewer`; free
+  space with `docker builder prune` / `docker image prune`, then
+  `docker compose ... up -d --force-recreate viewer`.
+- `docker compose -f docker/llm-bridge/nobuild/docker-compose.yml down -v` resets volumes.
