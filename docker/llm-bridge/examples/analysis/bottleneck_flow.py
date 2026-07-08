@@ -28,6 +28,7 @@ import pathlib
 import sys
 import tempfile
 import time
+import urllib.error
 import urllib.request
 
 BRIDGE = "http://127.0.0.1:8090"
@@ -40,13 +41,27 @@ OUT_DIR = pathlib.Path(__file__).resolve().parent
 
 # --- bridge HTTP helpers (standard library only) ---------------------------
 
+STALE_HELP = (
+    "The bridge drives one simulation per freshly loaded viewer session. "
+    "Reload the viewer tab at http://localhost:8081/draw and retry. If it "
+    "persists, clear the bridge's in-memory state:\n"
+    "  docker compose -f docker/llm-bridge/nobuild/docker-compose.yml restart bridge\n"
+    "then reload the tab and run again.")
+
+
 def _post(path: str, payload: dict | None = None) -> dict:
     data = json.dumps(payload or {}).encode()
     req = urllib.request.Request(
         BRIDGE + path, data=data,
         headers={"Content-Type": "application/json"}, method="POST")
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return json.load(resp)
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return json.load(resp)
+    except urllib.error.HTTPError as error:
+        try:
+            return json.load(error)            # bridge returns JSON on 4xx too
+        except (ValueError, OSError):
+            return {"ok": False, "error": f"HTTP {error.code}"}
 
 
 def _get(path: str) -> dict:
@@ -71,6 +86,10 @@ def _wait(poll, done, tries: int = 150, delay: float = 2.0):
 # --- run one simulation via the viewer -------------------------------------
 
 def run_bottleneck(n_agents: int) -> pathlib.Path:
+    active = (_get("/api/simulations/latest").get("simulation") or {}).get("status")
+    if active in ("queued", "accepted", "running"):
+        sys.exit(f"a simulation is already active ({active}).\n{STALE_HELP}")
+
     doc = json.loads(TEMPLATE.read_text())
     config = doc["config"]
     params = config["distributions"]["dist-room"]["parameters"]
@@ -89,7 +108,9 @@ def run_bottleneck(n_agents: int) -> pathlib.Path:
           lambda v: (v.get("scenario") or {}).get("id") == scenario_id, tries=30)
 
     time.sleep(3)                                # let the viewer finish loading
-    _post("/api/simulations/run")
+    run = _post("/api/simulations/run")
+    if not run.get("ok"):
+        sys.exit(f"run rejected: {run.get('error')}\n{STALE_HELP}")
     final = _wait(lambda: _get("/api/simulations/latest"),
                   lambda v: v["simulation"]["status"] in
                   ("completed", "failed", "rejected"))
