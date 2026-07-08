@@ -55,7 +55,7 @@ button, and confirm port `8090`.
 ## Contents
 
 ```text
-tooling/llm-bridge/
+docker/llm-bridge/
 ├── README.md                 # this file
 ├── bridge_server.py          # the HTTP bridge (stdlib only)
 ├── bridge-button-v14.js      # viewer-side helper button

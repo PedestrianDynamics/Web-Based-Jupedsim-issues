@@ -5,7 +5,7 @@ One command, three **stock** images, nothing built. This replaces the
 `LLM_BRIDGE_SETUP.md`.
 
 ```bash
-docker compose -f tooling/llm-bridge/nobuild/docker-compose.yml up
+docker compose -f docker/llm-bridge/nobuild/docker-compose.yml up
 ```
 
 Then open <http://localhost:8081/draw>. The **Bridge** button is already there;
