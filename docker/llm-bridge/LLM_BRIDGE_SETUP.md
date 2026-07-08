@@ -15,60 +15,29 @@ The viewer must be open in a browser for UI actions such as loading scenarios, r
 
 ## Files
 
-Important local files:
+Important files (paths relative to the repository root):
 
 ```text
-jupedsim-viewer-local/Dockerfile
-jupedsim-viewer-local/bridge-button.js
-jupedsim-http-bridge/bridge_server.py
-jupedsim-http-bridge/LLM_BRIDGE_USAGE.md
-jupedsim-http-bridge/CONFIG_JSON_TEMPLATE.md
-jupedsim-http-bridge/config.template.json
-jupedsim-http-bridge/geometry.template.wkt
+docker/llm-bridge/bridge_server.py
+docker/llm-bridge/bridge-button-v14.js
+docker/llm-bridge/LLM_BRIDGE_USAGE.md
+docker/llm-bridge/CONFIG_JSON_TEMPLATE.md
+docker/llm-bridge/config.template.json
+docker/llm-bridge/geometry.template.wkt
+docker/llm-bridge/nobuild/docker-compose.yml
 ```
 
 The bridge API guide is `LLM_BRIDGE_USAGE.md`. The scenario JSON guide is `CONFIG_JSON_TEMPLATE.md`.
 
-## Start The Bridge
+## Start Everything (no rebuild)
 
-From the repository root on Windows:
-
-```powershell
-py jupedsim-http-bridge\bridge_server.py --host 127.0.0.1 --port 8090
-```
-
-On Linux/macOS:
+The recommended path starts the viewer, the bridge, and a proxy that injects the
+**Bridge** button — all from stock images, no custom viewer build. From the
+repository root:
 
 ```bash
-python3 jupedsim-http-bridge/bridge_server.py --host 127.0.0.1 --port 8090
+docker compose -f docker/llm-bridge/nobuild/docker-compose.yml up
 ```
-
-Check it:
-
-```bash
-curl http://127.0.0.1:8090/api/health
-```
-
-## Start The Viewer
-
-Build the local viewer image with the bridge helper injected:
-
-```bash
-docker build -t jupedsim/jupedsim-web:bridge-local jupedsim-viewer-local
-```
-
-Run it on port `8081`:
-
-```bash
-docker run -d \
-  --name jupedsim-web-local \
-  -p 8081:8080 \
-  -v jupedsim-data:/data \
-  --memory 4g \
-  jupedsim/jupedsim-web:bridge-local
-```
-
-If a container named `jupedsim-web-local` already exists, stop it first or rename it as a rollback copy before starting a replacement.
 
 Open:
 
@@ -76,7 +45,30 @@ Open:
 http://localhost:8081/draw
 ```
 
-The viewer should show a **Bridge** button after **Analytics**. Click it and confirm port `8090`.
+The viewer shows a **Bridge** button after **Analytics**. Confirm its port is
+`8090`. See `docker/llm-bridge/nobuild/README.md` for how the injection works and
+what to verify.
+
+Check the bridge:
+
+```bash
+curl http://127.0.0.1:8090/api/health
+```
+
+### Run The Bridge Manually (alternative)
+
+If you already run the viewer another way, start just the stdlib bridge server
+yourself. On Windows:
+
+```powershell
+py docker\llm-bridge\bridge_server.py --host 127.0.0.1 --port 8090
+```
+
+On Linux/macOS:
+
+```bash
+python3 docker/llm-bridge/bridge_server.py --host 127.0.0.1 --port 8090
+```
 
 ## Send The Template Scenario
 
@@ -84,8 +76,8 @@ Use multipart upload for the two project files:
 
 ```bash
 curl -X POST http://127.0.0.1:8090/api/validate \
-  -F "config=@jupedsim-http-bridge/config.template.json;type=application/json" \
-  -F "geometry=@jupedsim-http-bridge/geometry.template.wkt;type=text/plain"
+  -F "config=@docker/llm-bridge/config.template.json;type=application/json" \
+  -F "geometry=@docker/llm-bridge/geometry.template.wkt;type=text/plain"
 ```
 
 The viewer polls the bridge and loads the scenario automatically.
@@ -183,14 +175,14 @@ For new scenarios, use `journeys_v2` plus each start area's `journey_weights`. K
 A project-local Codex skill draft lives at:
 
 ```text
-jupedsim-http-bridge/skills/jupedsim-web-bridge/SKILL.md
+docker/llm-bridge/skills/jupedsim-web-bridge/SKILL.md
 ```
 
 It is not installed globally. To use it in another Codex environment, copy the `jupedsim-web-bridge` folder into that environment's skills directory, then invoke `$jupedsim-web-bridge`.
 
 ## Troubleshooting
 
-- If the **Bridge** button is missing, the running viewer probably is not the `bridge-local` image or the page needs a hard reload.
+- If the **Bridge** button is missing, the proxy is probably not injecting the script (or the page needs a hard reload). Confirm with `curl -s http://localhost:8081/draw | grep __bridge`.
 - If bridge calls succeed but the UI does not change, confirm the **Bridge** button port is set to `8090`.
 - If simulation status becomes `rejected`, inspect the UI and `/api/validate` errors; the scenario may be incomplete or quota may be unavailable.
 - If no result files appear, keep the viewer open until the simulation-completed modal appears.

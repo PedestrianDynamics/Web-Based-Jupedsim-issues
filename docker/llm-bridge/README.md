@@ -29,7 +29,7 @@ navigation — the bridge only relays intent and reads state back.
 | Component | File | Role |
 |---|---|---|
 | Bridge server | [`bridge_server.py`](bridge_server.py) | Stdlib-only Python HTTP server (no third-party deps). Holds scenario/command/result state in memory and serves the API on `127.0.0.1:8090`. |
-| Viewer helper | [`bridge-button-v14.js`](bridge-button-v14.js) | Injected into the local viewer image; adds a **Bridge** button that polls `:8090` and applies bridge commands through the existing UI. |
+| Viewer helper | [`bridge-button-v14.js`](bridge-button-v14.js) | Injected into the running viewer page (via the `nobuild/` proxy or a custom image); adds a **Bridge** button that polls `:8090` and applies bridge commands through the existing UI. |
 
 The bridge sends only `config` (exits, distributions, checkpoints, zones,
 obstacles, `journeys_v2`) and `geometry_wkt` (the walkable area) — it does not
@@ -37,20 +37,27 @@ push DXF/IFC layers.
 
 ## Quick start
 
-Requires Python 3 and the public local viewer Docker setup. Full instructions,
-including building the viewer image with the helper injected, are in
-[`LLM_BRIDGE_SETUP.md`](LLM_BRIDGE_SETUP.md).
+Fastest path — viewer, bridge, and button-injecting proxy from stock images, no
+rebuild (see [`nobuild/README.md`](nobuild/README.md)):
 
 ```bash
-# 1. start the bridge (stdlib only, no install needed)
-python3 bridge_server.py --host 127.0.0.1 --port 8090
+docker compose -f docker/llm-bridge/nobuild/docker-compose.yml up
+```
 
-# 2. health check
+Then open the local viewer at `http://localhost:8081/draw` and confirm the
+**Bridge** button points at port `8090`:
+
+```bash
 curl http://127.0.0.1:8090/api/health
 ```
 
-Then open the local viewer at `http://localhost:8081/draw`, click the **Bridge**
-button, and confirm port `8090`.
+To run just the bridge yourself (stdlib only, no install needed):
+
+```bash
+python3 bridge_server.py --host 127.0.0.1 --port 8090
+```
+
+Full instructions are in [`LLM_BRIDGE_SETUP.md`](LLM_BRIDGE_SETUP.md).
 
 ## Contents
 
@@ -68,8 +75,12 @@ docker/llm-bridge/
 │   ├── scenario_room1.json
 │   ├── scenario_counterflow.json
 │   └── scenario_building.json
-└── skills/                   # optional agent skill for driving the bridge
-    └── jupedsim-web-bridge/
+├── skills/                   # optional agent skill for driving the bridge
+│   └── jupedsim-web-bridge/
+└── nobuild/                  # no-rebuild docker compose bring-up
+    ├── docker-compose.yml
+    ├── proxy/default.conf
+    └── README.md
 ```
 
 - **HTTP API reference:** [`LLM_BRIDGE_USAGE.md`](LLM_BRIDGE_USAGE.md)
