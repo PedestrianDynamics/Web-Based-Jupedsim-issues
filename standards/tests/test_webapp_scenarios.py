@@ -3,7 +3,6 @@ from pathlib import Path
 
 from jupedsim_scenarios import Scenario, load_scenario, run_scenario
 
-
 STANDARDS_DIR = Path(__file__).resolve().parents[1]
 
 
@@ -15,9 +14,7 @@ def _scenario_clone(scenario: Scenario, raw):
         .get("simulation_settings", {})
         .get("simulationParams", {})
         .get("model_type", scenario.model_type),
-        seed=raw.get("config", {})
-        .get("simulation_settings", {})
-        .get("baseSeed", scenario.seed),
+        seed=raw.get("config", {}).get("simulation_settings", {}).get("baseSeed", scenario.seed),
         sim_params=copy.deepcopy(
             raw.get("config", {})
             .get("simulation_settings", {})
@@ -46,7 +43,9 @@ def test_bottleneck_zone_slows_down_agents():
 
 
 def test_waiting_stage_holds_agents_before_exit():
-    scenario = load_scenario(str(STANDARDS_DIR / "general" / "scenario_files" / "waiting-stage-corridor"))
+    scenario = load_scenario(
+        str(STANDARDS_DIR / "general" / "scenario_files" / "waiting-stage-corridor")
+    )
     baseline_raw = copy.deepcopy(scenario.raw)
     baseline_raw["checkpoints"]["jps-checkpoints_0"]["waiting_time"] = 0.0
 

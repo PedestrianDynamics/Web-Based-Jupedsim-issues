@@ -6,6 +6,7 @@ population moves simultaneously in the opposite direction. The test sweeps the
 counterflow population size: 0, 10, 50, 100. The four base scenarios are
 stored as separate ZIPs in scenario_files/.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -23,8 +24,8 @@ class CounterflowBranch:
 
 def load_branches() -> list[CounterflowBranch]:
     return [
-        CounterflowBranch("counterflow=0",   0,   SCENARIO_FILES / "Nist-2-8-counterflow-0.zip"),
-        CounterflowBranch("counterflow=10",  10,  SCENARIO_FILES / "Nist-2-8-counterflow-10.zip"),
-        CounterflowBranch("counterflow=50",  50,  SCENARIO_FILES / "Nist-2-8-counterflow-50.zip"),
+        CounterflowBranch("counterflow=0", 0, SCENARIO_FILES / "Nist-2-8-counterflow-0.zip"),
+        CounterflowBranch("counterflow=10", 10, SCENARIO_FILES / "Nist-2-8-counterflow-10.zip"),
+        CounterflowBranch("counterflow=50", 50, SCENARIO_FILES / "Nist-2-8-counterflow-50.zip"),
         CounterflowBranch("counterflow=100", 100, SCENARIO_FILES / "Nist-2-8-counterflow-100.zip"),
     ]

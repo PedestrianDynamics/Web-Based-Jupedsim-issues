@@ -4,9 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-STAIR_WALKABLE_AREA_WKT = (
-    "POLYGON ((0 0, 10 0, 10 4, 19 4, 19 6, 10 6, 10 10, 0 10, 0 0))"
-)
+STAIR_WALKABLE_AREA_WKT = "POLYGON ((0 0, 10 0, 10 4, 19 4, 19 6, 10 6, 10 10, 0 10, 0 0))"
 STAIR_ZONE_COORDINATES = [[12.0, 4.0], [17.0, 4.0], [17.0, 6.0], [12.0, 6.0], [12.0, 4.0]]
 EXIT_COORDINATES = [[18, 4.2], [19.0, 4.2], [19.0, 5.8], [18, 5.8], [18, 4.2]]
 

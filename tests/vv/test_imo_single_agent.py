@@ -8,13 +8,11 @@ Note: SA-03 (pre-movement delay) deferred to later phase.
 """
 
 import pytest
-from vv_helpers import run_vv_scenario, agents_within_bounds, HAS_VV_DEPS
+from vv_helpers import HAS_VV_DEPS, agents_within_bounds, run_vv_scenario
 
 pytestmark = [
     pytest.mark.vv,
-    pytest.mark.skipif(
-        not HAS_VV_DEPS, reason="V&V runtime dependencies not installed"
-    ),
+    pytest.mark.skipif(not HAS_VV_DEPS, reason="V&V runtime dependencies not installed"),
 ]
 
 
@@ -63,9 +61,7 @@ class TestSA01SpeedInCorridor:
         expected_time = 38.0 / 1.2  # ~31.7s
         tolerance = 0.20
         evac = metrics["evacuation_time"]
-        assert (
-            expected_time * (1 - tolerance) <= evac <= expected_time * (1 + tolerance)
-        ), (
+        assert expected_time * (1 - tolerance) <= evac <= expected_time * (1 + tolerance), (
             f"Evacuation time {evac:.2f}s outside {expected_time:.1f}s ± {tolerance * 100}%"
         )
 

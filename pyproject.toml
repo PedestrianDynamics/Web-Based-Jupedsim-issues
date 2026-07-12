@@ -17,6 +17,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest",
+    "ruff",
 ]
 
 [tool.pytest.ini_options]
@@ -27,3 +28,17 @@ testpaths = [
 markers = [
     "vv: verification and validation tests",
 ]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.format]
+# Black-style formatting; applies to .py and .ipynb (Jupyter) alike.
+
+[tool.ruff.lint]
+# Start narrow: import sorting only. Pyflakes/pycodestyle rules produce
+# cross-cell false positives on notebooks (e.g. a helper defined in one cell
+# and used in another reads as F821); widen the rule set in a later pass once
+# a clean baseline is in place.
+select = ["I"]

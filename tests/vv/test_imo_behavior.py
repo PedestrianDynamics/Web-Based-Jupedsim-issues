@@ -7,13 +7,11 @@ These are universal property checks that should hold for any valid scenario.
 """
 
 import pytest
-from vv_helpers import run_vv_scenario, agents_within_bounds, HAS_VV_DEPS
+from vv_helpers import HAS_VV_DEPS, agents_within_bounds, run_vv_scenario
 
 pytestmark = [
     pytest.mark.vv,
-    pytest.mark.skipif(
-        not HAS_VV_DEPS, reason="V&V runtime dependencies not installed"
-    ),
+    pytest.mark.skipif(not HAS_VV_DEPS, reason="V&V runtime dependencies not installed"),
 ]
 
 # Reusable scenario configs for property tests
@@ -116,8 +114,8 @@ class TestBP02AgentsInBounds:
         )
         min_x, min_y, max_x, max_y = sc["bounds"]
         violations = agents_within_bounds(trajectory, min_x, min_y, max_x, max_y)
-        assert not violations, (
-            f"Agents left bounds in '{scenario_name}':\n" + "\n".join(violations[:10])
+        assert not violations, f"Agents left bounds in '{scenario_name}':\n" + "\n".join(
+            violations[:10]
         )
 
 

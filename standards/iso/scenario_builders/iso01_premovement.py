@@ -8,6 +8,7 @@ explicitly in Test 1 ("uniform, normal, log-normal, etc.").
 
 Source: ISO 20414:2020(E) Table 2 (Test 1).
 """
+
 from __future__ import annotations
 
 import sys
@@ -30,9 +31,9 @@ DISTRIBUTION_ID = "jps-distributions_0"
 # are chosen to produce a realistic pre-evacuation window for the 10-occupant
 # 8 m x 5 m room; uniform matches the value shipped in the base ZIP.
 ISO_CASES = {
-    "uniform":   {"a": 10.0,  "b": 100.0,  "max_time_s": 180},
-    "normal":    {"a": 60.0,  "b": 20.0,   "max_time_s": 180},
-    "lognormal": {"a": 4.586, "b": 0.967,  "max_time_s": 2400},
+    "uniform": {"a": 10.0, "b": 100.0, "max_time_s": 180},
+    "normal": {"a": 60.0, "b": 20.0, "max_time_s": 180},
+    "lognormal": {"a": 4.586, "b": 0.967, "max_time_s": 2400},
 }
 
 

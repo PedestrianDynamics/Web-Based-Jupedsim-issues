@@ -14,16 +14,17 @@ is the classic speed-down / flow-hump fundamental diagram.
 
 Source: ISO 20414:2020(E) Table 14 (Test 13).
 """
+
 from __future__ import annotations
 
 CORRIDOR_WIDTH = 2.0
 CORRIDOR_LENGTH = 60.0
 CORRIDOR_AREA = CORRIDOR_WIDTH * CORRIDOR_LENGTH  # 120 m^2
 
-LINE_A_X = 20.0   # zone 1 / zone 2 boundary
-LINE_B_X = 40.0   # zone 2 / zone 3 boundary
-ZONE2_LENGTH = LINE_B_X - LINE_A_X            # 20 m
-ZONE2_AREA = ZONE2_LENGTH * CORRIDOR_WIDTH    # 40 m^2
+LINE_A_X = 20.0  # zone 1 / zone 2 boundary
+LINE_B_X = 40.0  # zone 2 / zone 3 boundary
+ZONE2_LENGTH = LINE_B_X - LINE_A_X  # 20 m
+ZONE2_AREA = ZONE2_LENGTH * CORRIDOR_WIDTH  # 40 m^2
 
 # occupant count -> initial corridor density [p/m^2]
 DENSITY_CASES = {60: 0.5, 120: 1.0, 240: 2.0, 360: 3.0, 480: 4.0}
@@ -53,9 +54,11 @@ def build_raw_scenario(n_agents: int, seed: int = 42, max_simulation_time: float
             "jps-distributions_0": {
                 "type": "polygon",
                 "coordinates": [
-                    [0.3, 0.3], [CORRIDOR_LENGTH - 0.3, 0.3],
+                    [0.3, 0.3],
+                    [CORRIDOR_LENGTH - 0.3, 0.3],
                     [CORRIDOR_LENGTH - 0.3, CORRIDOR_WIDTH - 0.3],
-                    [0.3, CORRIDOR_WIDTH - 0.3], [0.3, 0.3],
+                    [0.3, CORRIDOR_WIDTH - 0.3],
+                    [0.3, 0.3],
                 ],
                 "parameters": {
                     "number": int(n_agents),
@@ -73,7 +76,8 @@ def build_raw_scenario(n_agents: int, seed: int = 42, max_simulation_time: float
             "jps-exits_0": {
                 "type": "polygon",
                 "coordinates": [
-                    [CORRIDOR_LENGTH - 0.3, 0.0], [CORRIDOR_LENGTH, 0.0],
+                    [CORRIDOR_LENGTH - 0.3, 0.0],
+                    [CORRIDOR_LENGTH, 0.0],
                     [CORRIDOR_LENGTH, CORRIDOR_WIDTH],
                     [CORRIDOR_LENGTH - 0.3, CORRIDOR_WIDTH],
                     [CORRIDOR_LENGTH - 0.3, 0.0],
@@ -136,5 +140,7 @@ def measure_zone2(traj_df, frame_rate: float) -> dict:
         "peak_density_zone2_p_m2": float(peak_density),
         "mean_density_zone2_p_m2": float(mean_density),
         "flow_line_b_p_s": float(flow_b),
-        "specific_flow_line_b_p_m_s": float(flow_b) / CORRIDOR_WIDTH if flow_b == flow_b else float("nan"),
+        "specific_flow_line_b_p_m_s": float(flow_b) / CORRIDOR_WIDTH
+        if flow_b == flow_b
+        else float("nan"),
     }

@@ -34,6 +34,7 @@ if str(STANDARDS_DIR / "rimea") not in sys.path:
 if str(STANDARDS_DIR) not in sys.path:
     sys.path.insert(0, str(STANDARDS_DIR))
 
+from jupedsim_scenarios import load_scenario, run_scenario
 from scenario_builders.rimea07_demographic import (
     AGE_GROUPS,
     WALKABLE_AREA_WKT,
@@ -43,8 +44,10 @@ from scenario_builders.rimea07_demographic import (
 from scenario_builders.rimea13_stairs import (
     STAIR_WALKABLE_AREA_WKT,
     STAIR_ZONE_COORDINATES,
-    build_raw_scenario as build_stair_raw_scenario,
     corbetta_envelope_bounds,
+)
+from scenario_builders.rimea13_stairs import (
+    build_raw_scenario as build_stair_raw_scenario,
 )
 from scenario_builders.rimea16_loop import (
     build_loop_scenario,
@@ -54,13 +57,10 @@ from scenario_builders.rimea16_loop import (
     load_reference_band,
     summarize_reference_fit,
 )
-from jupedsim_scenarios import load_scenario, run_scenario
 
 pytestmark = [
     pytest.mark.vv,
-    pytest.mark.skipif(
-        not HAS_VV_DEPS, reason="V&V runtime dependencies not installed"
-    ),
+    pytest.mark.skipif(not HAS_VV_DEPS, reason="V&V runtime dependencies not installed"),
 ]
 
 
@@ -404,9 +404,7 @@ class TestRiMEA05PremovementTime:
 
         observed = np.array([movement_start[agent_id] for agent_id in agent_ids])
         assert np.all(observed >= 9.9), f"Observed movement before 10s: {observed}"
-        assert np.all(observed <= 101.0), (
-            f"Observed movement after expected window: {observed}"
-        )
+        assert np.all(observed <= 101.0), f"Observed movement after expected window: {observed}"
 
         expected_sorted = np.sort(expected_times)
         observed_sorted = np.sort(observed)
@@ -515,11 +513,12 @@ class TestRiMEA07DemographicParams:
             .reset_index(drop=True)
         )
         specs = build_distribution_specs()
-        assert len(first_samples) == len(specs), "Spawn-order mapping requires one trajectory start per spec"
+        assert len(first_samples) == len(specs), (
+            "Spawn-order mapping requires one trajectory start per spec"
+        )
 
         mapping = {
-            int(row["id"]): specs[idx]
-            for idx, row in enumerate(first_samples.to_dict("records"))
+            int(row["id"]): specs[idx] for idx, row in enumerate(first_samples.to_dict("records"))
         }
 
         observed_by_age = {}
@@ -540,7 +539,8 @@ class TestRiMEA07DemographicParams:
 
         expected_counts = {int(group["age_years"]): int(group["count"]) for group in AGE_GROUPS}
         expected_ranges = {
-            int(group["age_years"]): (float(group["vmin"]), float(group["vmax"])) for group in AGE_GROUPS
+            int(group["age_years"]): (float(group["vmin"]), float(group["vmax"]))
+            for group in AGE_GROUPS
         }
 
         mean_observed_speeds = []
@@ -566,7 +566,8 @@ class TestRiMEA07DemographicParams:
             mean_observed_speeds.append(float(np.mean(observed)))
 
         assert all(
-            earlier >= later for earlier, later in zip(mean_observed_speeds, mean_observed_speeds[1:])
+            earlier >= later
+            for earlier, later in zip(mean_observed_speeds, mean_observed_speeds[1:])
         ), f"Observed mean speeds should decrease with age, got {mean_observed_speeds}"
 
 
@@ -1130,7 +1131,9 @@ class TestRiMEA13FundamentalDiagramStairs:
                 frame_step=10,
                 speed_calculation=pedpy.SpeedCalculation.BORDER_EXCLUDE,
             )
-            merged = traj.data.merge(speed_df[["id", "frame", "speed"]], on=["id", "frame"], how="inner")
+            merged = traj.data.merge(
+                speed_df[["id", "frame", "speed"]], on=["id", "frame"], how="inner"
+            )
             result.cleanup()
 
         stair_points = merged[
@@ -1139,7 +1142,9 @@ class TestRiMEA13FundamentalDiagramStairs:
         frame_counts = stair_points.groupby("frame")["id"].nunique().rename("count")
         stair_points = stair_points.merge(frame_counts, on="frame", how="left")
         stair_points["density"] = stair_points["count"] / stair_zone.area
-        stair_points = stair_points[(stair_points["density"] >= 0.6) & (stair_points["density"] <= 1.5)]
+        stair_points = stair_points[
+            (stair_points["density"] >= 0.6) & (stair_points["density"] <= 1.5)
+        ]
         stair_points["density_bin"] = np.round(stair_points["density"], 1)
         return stair_points
 
@@ -1174,7 +1179,9 @@ class TestRiMEA13FundamentalDiagramStairs:
         down_binned = down_points.groupby("density_bin", observed=True)["speed"].mean()
         common_bins = up_binned.index.intersection(down_binned.index)
 
-        assert len(common_bins) >= 5, f"Expected enough shared density bins, got {list(common_bins)}"
+        assert len(common_bins) >= 5, (
+            f"Expected enough shared density bins, got {list(common_bins)}"
+        )
         # "Downstairs faster than upstairs" is a population-level claim. Per-bin
         # comparison is sensitive to sparse high-density bins (count/area is
         # discrete, so the rightmost bins have few samples and high variance).
@@ -1287,9 +1294,7 @@ class TestRiMEA15LargeCrowdCorner:
 
     # L-shaped: horizontal 21x6 + vertical 6x35, overlapping 1m
     # Total path ~55m (20m horizontal + 35m vertical)
-    WALKABLE_CORNER = (
-        "POLYGON ((26 1, 26 -34, 20 -34, 20 0, 0 0, 0 6, 21 6, 21 1, 26 1))"
-    )
+    WALKABLE_CORNER = "POLYGON ((26 1, 26 -34, 20 -34, 20 0, 0 0, 0 6, 21 6, 21 1, 26 1))"
     EXIT_CORNER = {
         "jps-exits_0": {
             "type": "polygon",
@@ -1347,9 +1352,7 @@ class TestRiMEA15LargeCrowdCorner:
         )
         assert metrics_straight["agents_remaining"] == 0
         assert metrics_corner["agents_remaining"] == 0
-        assert (
-            metrics_corner["evacuation_time"] > metrics_straight["evacuation_time"]
-        ), (
+        assert metrics_corner["evacuation_time"] > metrics_straight["evacuation_time"], (
             f"Corner ({metrics_corner['evacuation_time']:.1f}s) should be slower "
             f"than straight ({metrics_straight['evacuation_time']:.1f}s)"
         )

@@ -48,9 +48,7 @@ def run_vv_scenario(
         # defaults would silently route agents through multiple journeys at
         # once. Reject the input so the test fails loudly instead of
         # producing nondeterministic results.
-        conflicting = [
-            dk for dk, dv in distributions.items() if dv.get("journey_weights")
-        ]
+        conflicting = [dk for dk, dv in distributions.items() if dv.get("journey_weights")]
         if conflicting:
             raise ValueError(
                 "run_vv_scenario was asked to build default journeys, but these "
@@ -77,9 +75,7 @@ def run_vv_scenario(
                     "sequence": [ek],
                 }
             )
-            distributions[dk]["journey_weights"] = [
-                {"journey_id": journey_id, "weight": 100}
-            ]
+            distributions[dk]["journey_weights"] = [{"journey_id": journey_id, "weight": 100}]
 
     config = {
         "config": {

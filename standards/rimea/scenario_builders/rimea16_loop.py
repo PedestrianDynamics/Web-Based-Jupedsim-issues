@@ -7,11 +7,10 @@ import math
 from dataclasses import dataclass
 from pathlib import Path
 
-import pandas as pd
 import numpy as np
-from shapely.geometry import LineString, Point, Polygon
-
+import pandas as pd
 from jupedsim_scenarios import Scenario
+from shapely.geometry import LineString, Point, Polygon
 
 LENGTH_M = 4.0
 RADIUS_M = 3.0
@@ -23,9 +22,7 @@ DEFAULT_AGENT_COUNT = 10
 DEFAULT_FRAME_STEP = 10
 MIN_LAPS_FOR_ANALYSIS = 3
 REFERENCE_CSV = (
-    Path(__file__).resolve().parents[1]
-    / "scenario_files"
-    / "rimea16_percentile_reference.csv"
+    Path(__file__).resolve().parents[1] / "scenario_files" / "rimea16_percentile_reference.csv"
 )
 
 
@@ -283,9 +280,7 @@ def build_loop_scenario(
         "distributions": distributions,
         "checkpoints": checkpoints,
         "exits": {
-            "jps-exits_0": {
-                "coordinates": _square(first_position[0], first_position[1], 0.08)
-            }
+            "jps-exits_0": {"coordinates": _square(first_position[0], first_position[1], 0.08)}
         },
         "journeys_v2": journeys_v2,
     }
@@ -340,9 +335,8 @@ def compute_density_speed_samples(
         lambda row: centerline.project(Point(float(row["x"]), float(row["y"]))),
         axis=1,
     )
-    df["unwrapped_distance"] = (
-        df.groupby("id", group_keys=False)["projected_distance"]
-        .apply(lambda series: _unwrap_positions(series, track_length))
+    df["unwrapped_distance"] = df.groupby("id", group_keys=False)["projected_distance"].apply(
+        lambda series: _unwrap_positions(series, track_length)
     )
     df["lap"] = np.floor(df["unwrapped_distance"] / track_length).astype(int)
 
@@ -389,9 +383,8 @@ def compute_lap_counts(
         lambda row: centerline.project(Point(float(row["x"]), float(row["y"]))),
         axis=1,
     )
-    df["unwrapped_distance"] = (
-        df.groupby("id", group_keys=False)["projected_distance"]
-        .apply(lambda series: _unwrap_positions(series, track_length))
+    df["unwrapped_distance"] = df.groupby("id", group_keys=False)["projected_distance"].apply(
+        lambda series: _unwrap_positions(series, track_length)
     )
     lap_counts = (
         df.groupby("id")["unwrapped_distance"]
@@ -412,9 +405,7 @@ def compute_density_speed_curve(
     if samples.empty:
         return pd.DataFrame(columns=["density_1pm", "speed_mps", "sample_count"])
     curve = samples.copy()
-    curve["density_bin"] = (
-        np.floor(curve["density_1pm"] / density_bin_size) * density_bin_size
-    )
+    curve["density_bin"] = np.floor(curve["density_1pm"] / density_bin_size) * density_bin_size
     curve = (
         curve.groupby("density_bin")["speed_mps"]
         .agg(["median", "count"])
@@ -491,9 +482,8 @@ def summarize_reference_fit(curve: pd.DataFrame, reference: pd.DataFrame) -> pd.
         reference_sorted["speed_p90_mps"],
     )
     curve_sorted["below_p10"] = curve_sorted["speed_mps"] < curve_sorted["speed_p10_mps"]
-    curve_sorted["inside_band"] = (
-        (curve_sorted["speed_mps"] >= curve_sorted["speed_p10_mps"])
-        & (curve_sorted["speed_mps"] <= curve_sorted["speed_p90_mps"])
+    curve_sorted["inside_band"] = (curve_sorted["speed_mps"] >= curve_sorted["speed_p10_mps"]) & (
+        curve_sorted["speed_mps"] <= curve_sorted["speed_p90_mps"]
     )
     curve_sorted["above_p90"] = curve_sorted["speed_mps"] > curve_sorted["speed_p90_mps"]
     return curve_sorted

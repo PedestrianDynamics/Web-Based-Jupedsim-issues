@@ -1,0 +1,13 @@
+# Local formatting/lint gate. Install once with `pre-commit install`.
+# Mirrors the CI `Lint` workflow (ruff config lives in pyproject.toml).
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.21
+    hooks:
+      # Import sort + lint (auto-fix), on .py and .ipynb.
+      - id: ruff
+        args: [--fix]
+        types_or: [python, jupyter]
+      # Black-style formatting, on .py and .ipynb.
+      - id: ruff-format
+        types_or: [python, jupyter]

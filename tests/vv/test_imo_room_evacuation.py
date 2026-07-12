@@ -7,13 +7,11 @@ RE-04: Counterflow (IMO 8)
 """
 
 import pytest
-from vv_helpers import run_vv_scenario, measure_flow_rate, HAS_VV_DEPS
+from vv_helpers import HAS_VV_DEPS, measure_flow_rate, run_vv_scenario
 
 pytestmark = [
     pytest.mark.vv,
-    pytest.mark.skipif(
-        not HAS_VV_DEPS, reason="V&V runtime dependencies not installed"
-    ),
+    pytest.mark.skipif(not HAS_VV_DEPS, reason="V&V runtime dependencies not installed"),
 ]
 
 
@@ -231,7 +229,9 @@ class TestRE04Counterflow:
     """
 
     # Two rooms connected by corridor
-    WALKABLE = "POLYGON ((0 0, 10 0, 10 4, 20 4, 20 0, 30 0, 30 10, 20 10, 20 6, 10 6, 10 10, 0 10, 0 0))"
+    WALKABLE = (
+        "POLYGON ((0 0, 10 0, 10 4, 20 4, 20 0, 30 0, 30 10, 20 10, 20 6, 10 6, 10 10, 0 10, 0 0))"
+    )
 
     EXIT_RIGHT = {
         "jps-exits_0": {

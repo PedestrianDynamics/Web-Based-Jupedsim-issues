@@ -14,11 +14,12 @@ agents cross the middle of the stair.
 
 Source: ISO 20414:2020(E) Table 13 (Test 12).
 """
+
 from __future__ import annotations
 
 ROOM_WIDTH = 10.0
 ROOM_DEPTH = 8.0
-STAIR_LENGTH = 6.0          # flat-corridor proxy for the 4.24 m incline + landings
+STAIR_LENGTH = 6.0  # flat-corridor proxy for the 4.24 m incline + landings
 STAIR_TOP_Y = ROOM_DEPTH + STAIR_LENGTH  # 14.0
 MEASURE_Y = ROOM_DEPTH + STAIR_LENGTH / 2.0  # 11.0 - mid-stair flow line
 
@@ -43,9 +44,15 @@ def build_geometry_wkt(width: float) -> str:
     """Room (10 x 8) with a centred stair of the given width rising to y = 14."""
     xl, xr = stair_bounds(width)
     pts = [
-        (0.0, 0.0), (ROOM_WIDTH, 0.0), (ROOM_WIDTH, ROOM_DEPTH),
-        (xr, ROOM_DEPTH), (xr, STAIR_TOP_Y), (xl, STAIR_TOP_Y),
-        (xl, ROOM_DEPTH), (0.0, ROOM_DEPTH), (0.0, 0.0),
+        (0.0, 0.0),
+        (ROOM_WIDTH, 0.0),
+        (ROOM_WIDTH, ROOM_DEPTH),
+        (xr, ROOM_DEPTH),
+        (xr, STAIR_TOP_Y),
+        (xl, STAIR_TOP_Y),
+        (xl, ROOM_DEPTH),
+        (0.0, ROOM_DEPTH),
+        (0.0, 0.0),
     ]
     return "POLYGON ((" + ", ".join(f"{x:g} {y:g}" for x, y in pts) + "))"
 
@@ -66,8 +73,10 @@ def build_raw_scenario(width: float, seed: int = 42, max_simulation_time: float 
             "jps-distributions_0": {
                 "type": "polygon",
                 "coordinates": [
-                    [0.3, 0.3], [ROOM_WIDTH - 0.3, 0.3],
-                    [ROOM_WIDTH - 0.3, ROOM_DEPTH - 0.3], [0.3, ROOM_DEPTH - 0.3],
+                    [0.3, 0.3],
+                    [ROOM_WIDTH - 0.3, 0.3],
+                    [ROOM_WIDTH - 0.3, ROOM_DEPTH - 0.3],
+                    [0.3, ROOM_DEPTH - 0.3],
                     [0.3, 0.3],
                 ],
                 "parameters": {
@@ -86,8 +95,10 @@ def build_raw_scenario(width: float, seed: int = 42, max_simulation_time: float 
             "jps-exits_0": {
                 "type": "polygon",
                 "coordinates": [
-                    [xl, STAIR_TOP_Y - 0.3], [xr, STAIR_TOP_Y - 0.3],
-                    [xr, STAIR_TOP_Y], [xl, STAIR_TOP_Y],
+                    [xl, STAIR_TOP_Y - 0.3],
+                    [xr, STAIR_TOP_Y - 0.3],
+                    [xr, STAIR_TOP_Y],
+                    [xl, STAIR_TOP_Y],
                     [xl, STAIR_TOP_Y - 0.3],
                 ],
                 "enable_throughput_throttling": False,
@@ -98,8 +109,10 @@ def build_raw_scenario(width: float, seed: int = 42, max_simulation_time: float 
             "jps-zones_0": {
                 "type": "polygon",
                 "coordinates": [
-                    [xl + 0.05, ROOM_DEPTH], [xr - 0.05, ROOM_DEPTH],
-                    [xr - 0.05, STAIR_TOP_Y - 0.1], [xl + 0.05, STAIR_TOP_Y - 0.1],
+                    [xl + 0.05, ROOM_DEPTH],
+                    [xr - 0.05, ROOM_DEPTH],
+                    [xr - 0.05, STAIR_TOP_Y - 0.1],
+                    [xl + 0.05, STAIR_TOP_Y - 0.1],
                     [xl + 0.05, ROOM_DEPTH],
                 ],
                 "speed_factor": STAIR_SPEED_FACTOR,
@@ -131,8 +144,12 @@ def measure_flow(traj_df, frame_rate: float, width: float) -> dict:
     crossings.sort()
     n = len(crossings)
     if n < 2:
-        return {"width": width, "crossed": n, "flow_p_s": float("nan"),
-                "specific_flow_p_m_s": float("nan")}
+        return {
+            "width": width,
+            "crossed": n,
+            "flow_p_s": float("nan"),
+            "specific_flow_p_m_s": float("nan"),
+        }
     duration = crossings[-1] - crossings[0]
     flow = (n - 1) / duration if duration > 0 else float("nan")
     return {

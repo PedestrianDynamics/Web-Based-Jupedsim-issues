@@ -56,9 +56,7 @@ def _load_builder(module_name: str):
 
 pytestmark = [
     pytest.mark.vv,
-    pytest.mark.skipif(
-        not HAS_VV_DEPS, reason="V&V runtime dependencies not installed"
-    ),
+    pytest.mark.skipif(not HAS_VV_DEPS, reason="V&V runtime dependencies not installed"),
 ]
 
 
@@ -107,9 +105,7 @@ class TestNist11Premovement:
         from scipy import stats as _stats
 
         base = _load("Nist-1-1-premovement")
-        case, variant = next(
-            (c, s) for c, s in build_variants(base) if c.name == case_id
-        )
+        case, variant = next((c, s) for c, s in build_variants(base) if c.name == case_id)
         result = run_scenario(variant, seed=42)
         try:
             df = result.trajectory_dataframe()
@@ -249,13 +245,9 @@ class TestNist23Corner:
             df = result.trajectory_dataframe()
             walkable_with_tol = scenario.walkable_polygon.buffer(0.001)
             outside = sum(
-                1
-                for row in df.itertuples()
-                if not walkable_with_tol.contains(Point(row.x, row.y))
+                1 for row in df.itertuples() if not walkable_with_tol.contains(Point(row.x, row.y))
             )
-            assert outside == 0, (
-                f"{outside} / {len(df)} trajectory points outside walkable area"
-            )
+            assert outside == 0, f"{outside} / {len(df)} trajectory points outside walkable area"
         finally:
             result.cleanup()
 
@@ -313,11 +305,7 @@ class TestNist28Counterflow:
                     for aid, sub in df.sort_values(["id", "frame"]).groupby("id")
                     if sub.iloc[0].x < 5.0  # primary distribution spawns on the left
                 }
-                evac = sum(
-                    1
-                    for aid in primary_ids
-                    if (df[df.id == aid].x >= 29.7).any()
-                )
+                evac = sum(1 for aid in primary_ids if (df[df.id == aid].x >= 29.7).any())
                 evacuated_counts.append(evac)
             finally:
                 result.cleanup()
@@ -378,25 +366,16 @@ class TestNist31RouteAllocation:
         scenario = _load("Nist-3-1-route-allocation")
         raw = scenario.raw
         if "journeys" in raw:
-            journey_map = {
-                j["stages"][0]: j["stages"][-1] for j in raw["journeys"]
-            }
+            journey_map = {j["stages"][0]: j["stages"][-1] for j in raw["journeys"]}
         else:
-            j_to_exit = {
-                j["id"]: j["sequence"][-1] for j in raw.get("journeys_v2", [])
-            }
+            j_to_exit = {j["id"]: j["sequence"][-1] for j in raw.get("journeys_v2", [])}
             journey_map = {}
             for did, d in scenario.distributions.items():
                 jw = d.get("journey_weights", [])
                 if jw:
                     journey_map[did] = j_to_exit.get(jw[0]["journey_id"], "")
-        dist_polys = {
-            did: Polygon(d["coordinates"])
-            for did, d in scenario.distributions.items()
-        }
-        exit_polys = {
-            eid: Polygon(e["coordinates"]) for eid, e in scenario.exits.items()
-        }
+        dist_polys = {did: Polygon(d["coordinates"]) for did, d in scenario.distributions.items()}
+        exit_polys = {eid: Polygon(e["coordinates"]) for eid, e in scenario.exits.items()}
         result = run_scenario(scenario, seed=42)
         try:
             df = result.trajectory_dataframe().sort_values(["id", "frame"])
@@ -406,34 +385,26 @@ class TestNist31RouteAllocation:
             matches = 0
             total = 0
             mismatches = []
-            for row_first, row_last in zip(
-                first.itertuples(), last.itertuples()
-            ):
+            for row_first, row_last in zip(first.itertuples(), last.itertuples()):
                 p0 = Point(row_first.x, row_first.y)
                 p1 = Point(row_last.x, row_last.y)
                 home = next(
                     (did for did, poly in dist_polys.items() if poly.covers(p0)),
                     None,
                 )
-                assert home is not None, (
-                    f"agent {row_first.id} did not spawn in any distribution"
-                )
+                assert home is not None, f"agent {row_first.id} did not spawn in any distribution"
                 expected = journey_map[home]
-                actual = min(
-                    exit_polys, key=lambda eid: exit_polys[eid].distance(p1)
-                )
+                actual = min(exit_polys, key=lambda eid: exit_polys[eid].distance(p1))
                 total += 1
                 if actual == expected:
                     matches += 1
                 else:
                     mismatches.append(
-                        f"agent {row_first.id} from {home}: "
-                        f"expected {expected}, got {actual}"
+                        f"agent {row_first.id} from {home}: expected {expected}, got {actual}"
                     )
             match_rate = matches / total if total else 0.0
             assert match_rate == 1.0, (
-                f"allocation match rate {match_rate:.1%} below 100%\n"
-                + "\n".join(mismatches[:5])
+                f"allocation match rate {match_rate:.1%} below 100%\n" + "\n".join(mismatches[:5])
             )
         finally:
             result.cleanup()
@@ -462,12 +433,8 @@ class TestNist51Congestion:
             peak_room_exit = 0.0
             peak_corridor = 0.0
             for _frame, sub in df.groupby("frame"):
-                room_count = (
-                    (sub.x.between(3.0, 5.0)) & (sub.y.between(4.5, 5.0))
-                ).sum()
-                corr_count = (
-                    (sub.x.between(3.0, 5.0)) & (sub.y.between(15.0, 17.0))
-                ).sum()
+                room_count = ((sub.x.between(3.0, 5.0)) & (sub.y.between(4.5, 5.0))).sum()
+                corr_count = ((sub.x.between(3.0, 5.0)) & (sub.y.between(15.0, 17.0))).sum()
                 peak_room_exit = max(peak_room_exit, room_count / area_room_exit)
                 peak_corridor = max(peak_corridor, corr_count / area_corridor)
             assert peak_room_exit > peak_corridor, (

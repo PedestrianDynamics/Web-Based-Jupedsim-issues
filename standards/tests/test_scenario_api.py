@@ -2,9 +2,7 @@ import json
 from pathlib import Path
 
 import pytest
-
 from jupedsim_scenarios import load_scenario
-
 
 STANDARDS_DIR = Path(__file__).resolve().parents[1]
 
@@ -55,16 +53,24 @@ def test_agent_param_aliases_are_mirrored_consistently():
 
 
 def test_index_based_zone_and_stage_mutators_hit_expected_objects():
-    zone_scenario = load_scenario(str(STANDARDS_DIR / "general" / "scenario_files" / "bottleneck-zone"))
-    waiting_scenario = load_scenario(str(STANDARDS_DIR / "general" / "scenario_files" / "waiting-stage-corridor"))
+    zone_scenario = load_scenario(
+        str(STANDARDS_DIR / "general" / "scenario_files" / "bottleneck-zone")
+    )
+    waiting_scenario = load_scenario(
+        str(STANDARDS_DIR / "general" / "scenario_files" / "waiting-stage-corridor")
+    )
 
     zone_scenario.set_zone_speed_factor(0, 0.42)
     waiting_scenario.set_checkpoint_waiting_time(0, 8.5)
     waiting_scenario.set_agent_count(0, 17)
 
     assert zone_scenario.raw["zones"]["jps-zones_0"]["speed_factor"] == pytest.approx(0.42)
-    assert waiting_scenario.raw["checkpoints"]["jps-checkpoints_0"]["waiting_time"] == pytest.approx(8.5)
-    assert waiting_scenario.raw["distributions"]["jps-distributions_0"]["parameters"]["number"] == 17
+    assert waiting_scenario.raw["checkpoints"]["jps-checkpoints_0"][
+        "waiting_time"
+    ] == pytest.approx(8.5)
+    assert (
+        waiting_scenario.raw["distributions"]["jps-distributions_0"]["parameters"]["number"] == 17
+    )
 
 
 def test_copy_supports_safe_overrides_without_mutating_original():

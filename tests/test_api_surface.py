@@ -8,7 +8,6 @@ import inspect
 
 import jupedsim_scenarios as jps
 
-
 # Only symbols this repo actually imports — verified via
 # `rg 'from jupedsim_scenarios import'` across the tree.
 REQUIRED_SYMBOLS = (
@@ -40,9 +39,7 @@ def test_load_scenario_accepts_path():
         inspect.Parameter.POSITIONAL_OR_KEYWORD,
     ), f"load_scenario.path can no longer be passed positionally: {sig}"
     # Any additional parameters must be optional (have a default).
-    extras_without_default = [
-        p for p in params[1:] if p.default is inspect.Parameter.empty
-    ]
+    extras_without_default = [p for p in params[1:] if p.default is inspect.Parameter.empty]
     assert not extras_without_default, (
         f"load_scenario gained required parameters beyond `path`: {sig}"
     )
@@ -63,9 +60,7 @@ def test_scenario_class_exposes_used_methods():
     # removed upstream in 0.5; this repo now assigns the attributes directly.
     # ``seed`` / ``model_type`` are dataclass fields (only on instances),
     # ``max_simulation_time`` is a property and ``set_model_params`` a method.
-    members = set(dir(jps.Scenario)) | set(
-        getattr(jps.Scenario, "__dataclass_fields__", {})
-    )
+    members = set(dir(jps.Scenario)) | set(getattr(jps.Scenario, "__dataclass_fields__", {}))
     required = {
         "seed",
         "max_simulation_time",

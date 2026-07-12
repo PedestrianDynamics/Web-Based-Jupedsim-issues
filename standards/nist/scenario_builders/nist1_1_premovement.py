@@ -9,6 +9,7 @@ other cases.
 
 Source: NIST TN 1822 section 3.1.1 (Verif.1.1).
 """
+
 from __future__ import annotations
 
 import sys
@@ -32,10 +33,10 @@ DISTRIBUTION_ID = "jps-distributions_0"
 # not NIST's U(10, 100)). Gamma/lognormal/weibull defaults DO match NIST
 # but we list them explicitly for traceability.
 NIST_CASES = {
-    "uniform":   {"a": 10.0,    "b": 100.0,   "max_time_s": 180},
-    "gamma":     {"a": 1.291,   "b": 103.901, "max_time_s": 1200},
-    "lognormal": {"a": 4.586,   "b": 0.967,   "max_time_s": 2400},
-    "weibull":   {"a": 139.285, "b": 1.195,   "max_time_s": 1200},
+    "uniform": {"a": 10.0, "b": 100.0, "max_time_s": 180},
+    "gamma": {"a": 1.291, "b": 103.901, "max_time_s": 1200},
+    "lognormal": {"a": 4.586, "b": 0.967, "max_time_s": 2400},
+    "weibull": {"a": 139.285, "b": 1.195, "max_time_s": 1200},
 }
 
 
