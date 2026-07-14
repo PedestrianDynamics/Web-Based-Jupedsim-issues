@@ -70,19 +70,21 @@ def build_variants(base_scenario):
     """Yield (case, scenario) - one per NIST distribution.
 
     The base scenario is deep-copied for each case so the loaded ZIP is never
-    mutated in place. ``set_agent_params`` is the documented loader API for
-    overriding distribution parameters.
+    mutated in place. Premovement parameters are written straight onto the
+    distribution parameters (see the note below) because ``set_agent_params``
+    rejects the ``premovement_*`` kwargs.
     """
     for case in load_cases():
         variant = deepcopy(base_scenario)
-        variant.set_agent_params(
-            DISTRIBUTION_ID,
-            use_premovement=True,
-            premovement_distribution=case.name,
-            premovement_param_a=case.param_a,
-            premovement_param_b=case.param_b,
-        )
-        variant.set_max_time(case.max_simulation_time_s)
+        # Premovement is read straight from the distribution parameters at
+        # simulation-init time; ``set_agent_params`` whitelists only movement
+        # kwargs and rejects ``premovement_*``, so write them in directly.
+        params = variant.distributions[DISTRIBUTION_ID]["parameters"]
+        params["use_premovement"] = True
+        params["premovement_distribution"] = case.name
+        params["premovement_param_a"] = case.param_a
+        params["premovement_param_b"] = case.param_b
+        variant.max_simulation_time = case.max_simulation_time_s
         yield case, variant
 
 
