@@ -304,7 +304,7 @@ class TestNist28Counterflow:
         evacuated_counts = []
         for branch in load_branches():
             scenario = load_scenario(str(branch.scenario_zip))
-            scenario.set_max_time(self.BUDGET_BY_CF[branch.counterflow_agents])
+            scenario.max_simulation_time = self.BUDGET_BY_CF[branch.counterflow_agents]
             result = run_scenario(scenario, seed=42)
             try:
                 df = result.trajectory_dataframe()
