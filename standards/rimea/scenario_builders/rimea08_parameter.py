@@ -11,6 +11,8 @@ Scenario builder for a 3-floor building:
 Exports
 -------
 build_geometry()          → (shapely.Polygon, list[shapely.Polygon])
+build_geometry_wkt()      → str
+build_raw_scenario(v0)    → dict suitable for jupedsim-scenarios/web import
 build_simulation(v0_arr)  → (jps.Simulation, exit_stage_id)
 run_until_evacuation(sim) → (evac_time_s, n_evacuated)
 v0_constant(v0)           → np.ndarray   shape (N_AGENTS,)
@@ -41,6 +43,9 @@ FLOOR_H      = 2 * ROOM_D + CORRIDOR_W        #  8 m
 FLOOR_STRIDE = FLOOR_H + STAIR_H              # 11 m  (y-distance between floor origins)
 
 N_AGENTS = N_FLOORS * N_ROOMS_SIDE * 2 * PERSONS_PER_ROOM   # 120
+
+JOURNEY_ID = "jps-journeys_0"
+EXIT_ID = "jps-exits_0"
 
 
 # ── Geometry builder ────────────────────────────────────────────────────────
@@ -145,6 +150,82 @@ def build_geometry():
 
     geometry = unary_union(parts)
     return geometry, all_rooms
+
+
+def build_geometry_wkt() -> str:
+    """Return the web-scenario walkable geometry as WKT."""
+    geometry, _ = build_geometry()
+    return geometry.wkt
+
+
+def build_raw_scenario(
+    v0: float = 1.25,
+    seed: int = 42,
+    max_simulation_time: float = 600.0,
+) -> dict:
+    """Build a representative web-app scenario for RiMEA Test 8.
+
+    The notebook varies desired speeds through the direct JuPedSim API. The
+    exported ZIP uses the central reference value, 1.25 m/s, and retains the
+    same 30 room distributions with four agents per room.
+    """
+    _, room_polys = build_geometry()
+
+    distributions = {}
+    for index, room in enumerate(room_polys):
+        dist_id = f"jps-distributions_{index}"
+        distributions[dist_id] = {
+            "type": "polygon",
+            "coordinates": [list(point) for point in room.exterior.coords],
+            "parameters": {
+                "number": PERSONS_PER_ROOM,
+                "radius": AGENT_RADIUS,
+                "v0": float(v0),
+                "distribution_mode": "by_number",
+                "radius_distribution": "constant",
+                "v0_distribution": "constant",
+                "use_flow_spawning": False,
+            },
+            "journey_weights": [{"journey_id": JOURNEY_ID, "weight": 100}],
+        }
+
+    corridor_y0 = ROOM_D
+    corridor_y1 = ROOM_D + CORRIDOR_W
+    return {
+        "config": {
+            "simulation_settings": {
+                "baseSeed": seed,
+                "simulationParams": {
+                    "model_type": "CollisionFreeSpeedModel",
+                    "max_simulation_time": max_simulation_time,
+                },
+            }
+        },
+        "distributions": distributions,
+        "exits": {
+            EXIT_ID: {
+                "type": "polygon",
+                "coordinates": [
+                    [FLOOR_W - 0.35, corridor_y0 + 0.1],
+                    [FLOOR_W - 0.05, corridor_y0 + 0.1],
+                    [FLOOR_W - 0.05, corridor_y1 - 0.1],
+                    [FLOOR_W - 0.35, corridor_y1 - 0.1],
+                    [FLOOR_W - 0.35, corridor_y0 + 0.1],
+                ],
+                "enable_throughput_throttling": False,
+                "max_throughput": 0,
+            }
+        },
+        "zones": {},
+        "journeys_v2": [
+            {
+                "id": JOURNEY_ID,
+                "name": JOURNEY_ID,
+                "color": "#3b82f6",
+                "sequence": [EXIT_ID],
+            }
+        ],
+    }
 
 
 # ── Simulation builder ──────────────────────────────────────────────────────
