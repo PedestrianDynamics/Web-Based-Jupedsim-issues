@@ -544,20 +544,18 @@ class TestNist52MaxFlow:
         scenario = _load("Nist-5-2-max-flow")
         result = run_scenario(scenario, seed=42)
         try:
-            assert result.agents_evacuated > 0
+            # Every agent evacuates, so each agent's last recorded frame is its
+            # absorption (exit) time - no spatial cutoff needed.
+            assert result.agents_remaining == 0, "not all agents evacuated"
             df = result.trajectory_dataframe().sort_values(["id", "frame"])
-            grouped = df.groupby("id")
-            # Exit time per agent = last recorded frame (absorbed at the exit);
-            # an agent that evacuated ends within a door-width of the exit.
-            last = grouped.last()
-            evac = last[last.x <= 0.6].index
             exit_times = np.sort(
-                (grouped.frame.max()[evac] / result.frame_rate).values
+                (df.groupby("id").frame.max() / result.frame_rate).values
             )
             assert len(exit_times) > 0, "no agent reached the exit"
-            # Sustained specific flow over the egress period.
+            # Sustained specific flow over the egress period (first to last exit),
+            # using the runner's own evacuated count.
             span = exit_times.max() - exit_times.min()
-            flow = len(exit_times) / span / self.EXIT_WIDTH_M
+            flow = result.agents_evacuated / span / self.EXIT_WIDTH_M
             assert flow <= self.IMO_MAX_FLOW, (
                 f"specific flow {flow:.2f} p/m/s exceeds IMO {self.IMO_MAX_FLOW} p/m/s"
             )
