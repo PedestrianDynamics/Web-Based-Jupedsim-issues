@@ -9,6 +9,16 @@ on:
     - cron: "0 6 * * 1"  # Weekly Monday 06:00 UTC
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+  issues: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages-${{ github.ref }}"
+  cancel-in-progress: false
+
 jobs:
   vv-tests:
     runs-on: ubuntu-latest
@@ -38,85 +48,13 @@ jobs:
       with:
         paths: results/vv-tests.xml
 
-    - name: V&V summary table
+    # Build the standards coverage report (HTML dashboard + Markdown mirror)
+    # from the manifest joined to the live JUnit results. Stdlib only.
+    - name: Generate standards coverage report
       if: always()
       run: |
-        python3 -c "
-        import xml.etree.ElementTree as ET, pathlib, os, sys, datetime
-
-        sys.path.insert(0, 'tests/vv')
-        from test_registry import TEST_MAP
-
-        xml = pathlib.Path('results/vv-tests.xml')
-        if not xml.exists():
-            print('No JUnit XML found')
-            raise SystemExit(0)
-
-        tree = ET.parse(xml)
-
-        rows = []
-        for tc in tree.iter('testcase'):
-            cls = tc.get('classname', '').split('.')[-1]
-            fail = tc.find('failure')
-            skip = tc.find('skipped')
-            if skip is not None:
-                result = 'SKIP'
-            elif fail is not None:
-                result = 'FAIL'
-            else:
-                result = 'PASS'
-
-            test_name, ref, criterion = cls, '\u2014', tc.get('name', '')
-            for prefix, (tn, r, c) in TEST_MAP.items():
-                if cls.startswith(prefix):
-                    test_name, ref, criterion = tn, r, c
-                    break
-
-            rows.append((test_name, ref, criterion, result))
-
-        # Deduplicate (parametrized tests share the same class)
-        seen = set()
-        unique_rows = []
-        for row in rows:
-            key = row[0]
-            if key in seen:
-                for i, r in enumerate(unique_rows):
-                    if r[0] == key and row[3] == 'FAIL':
-                        unique_rows[i] = row
-                continue
-            seen.add(key)
-            unique_rows.append(row)
-        rows = unique_rows
-
-        lines = []
-        lines.append('## V&V Test Results\n')
-        lines.append(f'*Last updated: {datetime.datetime.utcnow().strftime(\"%Y-%m-%d %H:%M UTC\")}*\n')
-        lines.append('| Test | Reference | Criterion | Result |')
-        lines.append('|------|-----------|-----------|--------|')
-        for test_name, ref, crit, res in rows:
-            icon = {'PASS': ':white_check_mark:', 'FAIL': ':x:', 'SKIP': ':fast_forward:'}[res]
-            lines.append(f'| {test_name} | {ref} | {crit} | {icon} {res} |')
-
-        total = len(rows)
-        passed = sum(1 for r in rows if r[3] == 'PASS')
-        failed = sum(1 for r in rows if r[3] == 'FAIL')
-        skipped = sum(1 for r in rows if r[3] == 'SKIP')
-        summary_line = f'**{passed}/{total} passed'
-        if failed: summary_line += f', {failed} failed'
-        if skipped: summary_line += f', {skipped} skipped'
-        summary_line += '**'
-        lines.append(f'\n{summary_line}')
-
-        md = '\n'.join(lines)
-
-        summary_path = os.environ.get('GITHUB_STEP_SUMMARY', '/dev/stdout')
-        with open(summary_path, 'a') as f:
-            f.write(md + '\n')
-
-        pathlib.Path('results').mkdir(exist_ok=True)
-        with open('results/vv-summary.md', 'w') as f:
-            f.write(md + '\n')
-        "
+        python3 scripts/gen_standards_report.py --junit results/vv-tests.xml --outdir site
+        cat site/summary.md >> "$GITHUB_STEP_SUMMARY"
 
     - name: Update pinned issue
       # Only push/schedule runs on main update the pinned tracking issue.
@@ -127,11 +65,31 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        if [ -f results/vv-summary.md ]; then
-          jq -n --rawfile body results/vv-summary.md '{"body": $body}' | \
+        if [ -f site/summary.md ]; then
+          jq -n --rawfile body site/summary.md '{"body": $body}' | \
             curl -s -X PATCH \
               -H "Authorization: token $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               -d @- \
               "https://api.github.com/repos/PedestrianDynamics/jupedsim-web-community/issues/67"
         fi
+
+    - name: Upload Pages artifact
+      if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: site
+
+  # Publish the dashboard to GitHub Pages (main only). Requires Pages to be
+  # enabled with "GitHub Actions" as the source (Settings -> Pages).
+  deploy-pages:
+    needs: vv-tests
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4

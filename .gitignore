@@ -1,3 +1,6 @@
 __pycache__
 *.ipynb_checkpoints
 *~
+
+# V&V standards coverage manifest (overrides a global *.json ignore some contributors may have)
+!standards/coverage.json
