@@ -395,6 +395,11 @@ class TestNist31RouteAllocation:
     """NIST Verif.3.1 - 12 rooms around a 1 m corridor; main exit serves rooms
     1-4 and 7-10, secondary exit serves rooms 5, 6, 11, 12.
 
+    Population is 13 agents (one per room, plus one). NIST TN 1822 section
+    3.1.3 states "23 persons", but that is a typo in the guideline - the
+    Figure 8 layout has 12 rooms, so 13 is the faithful count. The allocation
+    split (8 rooms -> main, 4 -> secondary) matches the standard.
+
     Acceptance: every agent must end at the exit allocated by its journey.
     The walkable polygon is rebuilt parametrically; see MODIFICATIONS.md
     section B12.

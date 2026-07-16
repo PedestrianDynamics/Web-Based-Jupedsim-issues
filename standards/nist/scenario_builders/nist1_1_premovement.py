@@ -27,10 +27,12 @@ from utils.premovement_distributions import (  # type: ignore  # noqa: E402
 
 DISTRIBUTION_ID = "jps-distributions_0"
 
-# NIST TN 1822 section 3.1.1 parameters - hard-coded so we never depend on
-# upstream PREMOVEMENT_PRESETS defaults (which use U(0, 60) for uniform,
-# not NIST's U(10, 100)). Gamma/lognormal/weibull defaults DO match NIST
-# but we list them explicitly for traceability.
+# Distribution parameters for each case. NIST TN 1822 section 3.1.1 names
+# only the distribution *types* (uniform / normal / log-normal / etc.), not
+# numeric parameters - these values are the model's built-in premovement
+# presets, hard-coded here so we never depend on upstream PREMOVEMENT_PRESETS
+# defaults. Uniform is overridden to U(10, 100) (the upstream default is
+# U(0, 60)); gamma/lognormal/weibull match the presets, listed for traceability.
 NIST_CASES = {
     "uniform":   {"a": 10.0,    "b": 100.0,   "max_time_s": 180},
     "gamma":     {"a": 1.291,   "b": 103.901, "max_time_s": 1200},
@@ -55,7 +57,8 @@ class PreEvacCase:
 
 
 def load_cases() -> list[PreEvacCase]:
-    """Return the four NIST pre-evac cases with the parameters from TN 1822."""
+    """Return the four pre-evac cases (distribution types per NIST TN 1822
+    section 3.1.1; numeric parameters as configured in ``NIST_CASES``)."""
     return [
         PreEvacCase(
             name=name,

@@ -33,11 +33,19 @@ For deviations from the NIST original specifications see
 | Verif.3.3  | Affiliation                            | pending  | requires affiliation component |
 | Verif.4.1  | Dynamic availability of exits          | pending  | requires runtime exit toggling |
 | Verif.5.1  | Congestion                             | covered  | `Nist-5-1-congestion.zip` |
-| Verif.5.2  | Maximum flow rates                     | covered  | `Nist-5-2-max-flow.zip` (NIST Mode B - emergent flow) |
+| Verif.5.2  | Maximum flow rates                     | covered* | `Nist-5-2-max-flow.zip` (emergent-flow non-exceedance check) |
 
-\* Verif.2.9 ships geometry + journeys but the original config used a custom
-`group_id` parameter that was stripped during cleaning; the notebook will need
-to apply group behaviour through whatever mechanism the loader supports.
+\* **Verif.2.9** and **Verif.5.2** run and produce trajectories, but their one
+NIST numeric criterion needs a `CollisionFreeSpeedModel` capability the model
+lacks, so each is a strict `xfail` (see issue #151):
+- Verif.2.9 expects Group 1 to reach the exit together (arrival spread ≤ 10 s).
+  There is no native group-cohesion model, so the 0.5 m/s member lags the
+  1.25 m/s members (spread ~24 s). The original config's custom `group_id`
+  parameter was stripped during cleaning.
+- Verif.5.2 (emergent-flow reading of NIST §3.1.5) expects the sustained
+  specific flow through the 1 m exit to stay under the IMO 1.33 p/m/s
+  reference. There is no door-flow limiter, so the emergent flow (~5 p/m/s)
+  exceeds it.
 
 ## Modification highlights vs NIST originals
 
@@ -52,11 +60,14 @@ See [`MODIFICATIONS.md`](MODIFICATIONS.md) for the full audit trail. Summary:
   specifies.
 - **Verif.3.1 (S12)** geometry was rebuilt to NIST Figure 8 (12 rooms around a
   1 m corridor + vestibule); the previous tree had a bare 18 m x 11 m
-  rectangle.
-- **Verif.5.2 (S17)** uses NIST's Mode B (emergent-flow validation), because
-  the JuPedSim CollisionFreeSpeedModel has no built-in door-flow limiter. The
-  1.33 p/m/s value (IMO MSC/Circ.1238) is a post-run comparison threshold,
-  not an input cap applied to the exit.
+  rectangle. Population is **13 agents** (one per room, plus one). NIST TN 1822
+  §3.1.3 says "23 persons", but that is a typo in the guideline — the Figure 8
+  layout has 12 rooms, so 13 is the faithful count. The allocation split
+  (8 rooms → main exit, 4 → secondary) matches the standard.
+- **Verif.5.2 (S17)** uses the emergent-flow non-exceedance interpretation of
+  NIST §3.1.5, because the JuPedSim CollisionFreeSpeedModel has no built-in
+  door-flow limiter. The 1.33 p/m/s value (IMO MSC/Circ.1238) is a post-run
+  comparison threshold, not an input cap applied to the exit.
 - **Terminology**: "pre-evacuation time" used throughout in place of mixed
   "pre-movement / immediate response / instant response / response time 0"
   wording from earlier V&V iterations. NIST TN 1822 uses "pre-evacuation

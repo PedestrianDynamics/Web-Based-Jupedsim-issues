@@ -79,7 +79,7 @@ allocation when the ZIP also contains a `journeys_v2` block (with
 `id` / `name` / `color` / `sequence`) plus per-distribution
 `journey_weights`. When only legacy `journeys` is present the loader
 falls back to nearest-exit routing, which silently misroutes agents in
-multi-exit scenarios (notably Verif.3.1, where 2/23 agents from Room 10
+multi-exit scenarios (notably Verif.3.1, where 2/13 agents from Room 10
 went to the secondary exit instead of their allocated main exit).
 
 Every ZIP in this contribution therefore ships **both schemas**:
@@ -93,7 +93,7 @@ Every ZIP in this contribution therefore ships **both schemas**:
   to its single journey.
 
 With this dual-schema ZIP the canonical loader enforces the NIST-allocated
-routes strictly (verified: 23/23 agents reach their allocated exit on
+routes strictly (verified: 13/13 agents reach their allocated exit on
 Verif.3.1). The legacy block keeps the ZIP round-trippable through the
 web app.
 
@@ -190,10 +190,10 @@ Not shipped. Requires reduced-mobility / per-agent size profiles.
 - This supersedes earlier attempts that rebuilt the geometry
   parametrically — see `_staging/replace_s12_with_rimea10.py` for the
   one-line `shutil.copy` that wires rimea-10 in.
-- Agent count: 13 (rimea-10's value). NIST's original spec asks for
-  23 agents (2 per room except Room 3 with 1); the route-allocation
-  semantics are independent of agent count, so the rimea-10 count
-  is kept.
+- Agent count: 13 (one per room, plus a second in one room; rimea-10's
+  value). NIST TN 1822 §3.1.3 says "23 persons", but that is a typo in the
+  guideline — the Figure 8 layout has 12 rooms, so 13 is the faithful count.
+  The allocation split (8 rooms → main, 4 → secondary) matches the standard.
 
 ### B13. Verif.3.2 — Social influence (S13.x) — PENDING
 
@@ -216,17 +216,18 @@ Not shipped. Requires runtime exit toggling (NIST closes Exit 1 at t = 1 s).
 
 ### B17. Verif.5.2 — Maximum flow rates (S17)
 
-- **NIST Mode B (emergent-flow validation)** is the default because the
+- **The emergent-flow interpretation** is the default because the
   CollisionFreeSpeedModel has no built-in door-flow limiter. NIST TN 1822
-  Verif.5.2 explicitly offers two interpretations: (A) verification of a
-  restricted-flow model — set the exit cap and check it is enforced; or (B)
-  validation of emergent flow — let flow emerge and check it stays below
-  the threshold. The notebook compares the recorded flow against the
-  1.33 p/m/s reference (IMO MSC/Circ.1238) as a post-run threshold.
+  Verif.5.2 offers two readings: (1) verification of a restricted-flow model —
+  set the exit cap and check it is enforced; or (2) validation of emergent
+  flow — let flow emerge and check it stays below the threshold. The notebook
+  compares the recorded flow against the 1.33 p/m/s reference
+  (IMO MSC/Circ.1238) as a post-run threshold. ("Mode A/B" naming used in
+  earlier drafts is not NIST terminology and has been dropped.)
 - The exit retains the canonical loader fields `max_throughput: 1.33` and
-  `enable_throughput_throttling: false`. To switch to Mode A (when the
-  runner under test supports throttled exits), the notebook can flip
-  `enable_throughput_throttling` to `true` after loading.
+  `enable_throughput_throttling: false`. To exercise the restricted-flow
+  reading (when the runner under test supports throttled exits), the notebook
+  can flip `enable_throughput_throttling` to `true` after loading.
 - **Schema cleanup** (A3): only the top-level `metadata` block was removed.
 
 ## C. Items intentionally NOT changed
