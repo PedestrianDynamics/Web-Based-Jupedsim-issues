@@ -1,6 +1,7 @@
 [![IMO Tests](https://github.com/PedestrianDynamics/jupedsim-web-community/actions/workflows/imo.yml/badge.svg)](https://github.com/PedestrianDynamics/jupedsim-web-community/actions/workflows/imo.yml)
 [![RiMEA Tests](https://github.com/PedestrianDynamics/jupedsim-web-community/actions/workflows/rimea.yml/badge.svg)](https://github.com/PedestrianDynamics/jupedsim-web-community/actions/workflows/rimea.yml)
 [![ISO Tests](https://img.shields.io/badge/ISO%20Tests-planned-lightgrey)](https://github.com/PedestrianDynamics/jupedsim-web-community/issues)
+[![V&V Coverage](https://img.shields.io/badge/V%26V-coverage%20dashboard-005676)](https://pedestriandynamics.org/jupedsim-web-community/)
 [![Docker Pulls](https://img.shields.io/docker/pulls/jupedsim/jupedsim-web)](https://hub.docker.com/r/jupedsim/jupedsim-web)
 [![Docker Image Version](https://img.shields.io/docker/v/jupedsim/jupedsim-web?sort=semver&label=docker%20tag)](https://hub.docker.com/r/jupedsim/jupedsim-web/tags)
 [![jupedsim on PyPI](https://img.shields.io/pypi/v/jupedsim?label=jupedsim)](https://pypi.org/project/jupedsim/)
@@ -25,6 +26,7 @@ With JuPedSim Web you can:
 
 With this repository you can:
 
+- Browse the [V&V standards coverage dashboard](https://pedestriandynamics.org/jupedsim-web-community/) (IMO, RiMEA, NIST TN 1822, ISO 20414)
 - Report issues and discuss feature ideas
 - Run the public Docker setup locally
 - Execute public example scenarios from Python
