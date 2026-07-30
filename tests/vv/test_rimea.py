@@ -40,6 +40,13 @@ from scenario_builders.rimea07_demographic import (
     build_distribution_specs,
     build_raw_scenario,
 )
+from scenario_builders.rimea08_parameter import (
+    N_AGENTS as RIMEA08_N_AGENTS,
+    build_simulation as build_rimea08_simulation,
+    run_until_evacuation as run_rimea08_until_evacuation,
+    v0_constant as rimea08_v0_constant,
+    v0_uniform as rimea08_v0_uniform,
+)
 from scenario_builders.rimea13_stairs import (
     STAIR_WALKABLE_AREA_WKT,
     STAIR_ZONE_COORDINATES,
@@ -574,18 +581,101 @@ class TestRiMEA07DemographicParams:
 # A3 — Functional Verification
 # ---------------------------------------------------------------------------
 
-
-@pytest.mark.skip(reason="Requires multi-story building — placeholder")
 class TestRiMEA08ParameterStudy:
     """RiMEA Test 8: Parameter study.
 
-    Geometry: 3-storey test floor plan.
-    Expected: Evacuation time varies monotonically with parameter changes.
+    Geometry: 3-storey test floor plan containing 120 agents.
+
+    The first test varies every agent's desired speed and verifies that
+    evacuation time decreases as the desired speed increases.
+
+    The second test keeps the mean desired speed at 1.25 m/s but varies
+    its distribution. The resulting evacuation times must stay within
+    30% of the constant-speed reference run.
     """
 
-    def test_parameter_sensitivity(self):
-        pass
+    SEED = 42
+    MAX_SIMULATION_TIME = 600.0
 
+    @classmethod
+    def _run(cls, desired_speeds):
+        """Run one Test 8 simulation and return its evacuation time."""
+        simulation, _ = build_rimea08_simulation(
+            desired_speeds,
+            seed=cls.SEED,
+        )
+
+        evacuation_time, number_evacuated = (
+            run_rimea08_until_evacuation(
+                simulation,
+                max_time=cls.MAX_SIMULATION_TIME,
+            )
+        )
+
+        assert number_evacuated == RIMEA08_N_AGENTS, (
+            f"Only {number_evacuated}/{RIMEA08_N_AGENTS} agents evacuated "
+            f"within {cls.MAX_SIMULATION_TIME:.0f} seconds"
+        )
+
+        return evacuation_time
+
+    def test_evacuation_time_decreases_as_speed_increases(self):
+        """Increasing desired speed must decrease evacuation time."""
+        desired_speeds = [1.0, 1.25, 1.5, 2.0]
+
+        evacuation_times = [
+            self._run(rimea08_v0_constant(speed))
+            for speed in desired_speeds
+        ]
+
+        for slower_speed, faster_speed, slower_time, faster_time in zip(
+            desired_speeds,
+            desired_speeds[1:],
+            evacuation_times,
+            evacuation_times[1:],
+        ):
+            assert slower_time > faster_time, (
+                "Evacuation time did not decrease when desired speed "
+                f"increased from {slower_speed:.2f} m/s to "
+                f"{faster_speed:.2f} m/s: "
+                f"{slower_time:.2f} s versus {faster_time:.2f} s"
+            )
+
+    def test_speed_distribution_sensitivity(self):
+        """Different speed spreads with the same mean remain comparable."""
+        constant_time = self._run(
+            rimea08_v0_constant(1.25)
+        )
+        narrow_distribution_time = self._run(
+            rimea08_v0_uniform(
+                mean=1.25,
+                half_range=0.25,
+                seed=self.SEED,
+            )
+        )
+        wide_distribution_time = self._run(
+            rimea08_v0_uniform(
+                mean=1.25,
+                half_range=0.50,
+                seed=self.SEED,
+            )
+        )
+
+        tolerance = 0.30 * constant_time
+
+        assert abs(narrow_distribution_time - constant_time) < tolerance, (
+            "The U(1.00, 1.50) evacuation time differs by more than 30% "
+            f"from the constant 1.25 m/s result: "
+            f"{narrow_distribution_time:.2f} s versus "
+            f"{constant_time:.2f} s"
+        )
+
+        assert abs(wide_distribution_time - constant_time) < tolerance, (
+            "The U(0.75, 1.75) evacuation time differs by more than 30% "
+            f"from the constant 1.25 m/s result: "
+            f"{wide_distribution_time:.2f} s versus "
+            f"{constant_time:.2f} s"
+        )
 
 # ---------------------------------------------------------------------------
 # A4 — Qualitative Verification
