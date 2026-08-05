@@ -18,8 +18,10 @@ import tempfile
 import zipfile
 from contextlib import redirect_stdout
 
+import jupedsim as jps
 import numpy as np
 import pytest
+from shapely import wkt
 from shapely.geometry import Point, Polygon
 from vv_helpers import (
     HAS_VV_DEPS,
@@ -309,17 +311,148 @@ class TestRiMEA03SpeedDownStairs:
         )
 
 
-@pytest.mark.skip(reason="Requires measurement areas and density sweeps — placeholder")
 class TestRiMEA04FundamentalDiagram:
-    """RiMEA Test 4: Measurement of the fundamental diagram.
+    """Scaled RiMEA Test 4: Measurement of the fundamental diagram.
 
-    Geometry: 1000m x 10m corridor with 3 measuring points.
-    Sweep densities: 0.5, 1, 2, 3, 4, 5, 6 P/m².
-    Expected: Speed decreases with density; flow = speed * density.
+    Geometry: 200m x 10m corridor with three 2m x 2m measuring areas.
+    Sweep densities: 0.5, 1, 2 and 3 P/m².
+    Measurement window: 10s to 60s, after discarding the transient.
+    Expected: Local density increases with population, speed does not increase
+    with density, and flow equals speed multiplied by density.
     """
 
+    SCENARIO_ZIP = (
+        STANDARDS_DIR
+        / "rimea"
+        / "scenario_files"
+        / "Rimea-04-fundamental-diagram.zip"
+    )
+    AGENT_COUNTS = [1000, 2000, 4000, 6000]
+    T_MIN = 10.0
+    T_MAX = 60.0
+    MEASURING_AREAS = {
+        "control1": {"x": 50.0, "x_tol": 1.0, "y_min": 6.0, "y_max": 8.0},
+        "main": {"x": 100.0, "x_tol": 1.0, "y_min": 6.0, "y_max": 8.0},
+        "control2": {"x": 100.0, "x_tol": 1.0, "y_min": 4.0, "y_max": 6.0},
+    }
+
+    @staticmethod
+    def _measurement_polygon(area):
+        return Polygon(
+            [
+                (area["x"] - area["x_tol"], area["y_min"]),
+                (area["x"] + area["x_tol"], area["y_min"]),
+                (area["x"] + area["x_tol"], area["y_max"]),
+                (area["x"] - area["x_tol"], area["y_max"]),
+            ]
+        )
+
+    @classmethod
+    def _run_density(cls, raw, geometry, number_of_agents):
+        simulation_params = raw["config"]["simulation_settings"]["simulationParams"]
+        distribution = raw["distributions"]["jps-distributions_0"]
+        distribution_params = distribution["parameters"]
+        exit_polygon = Polygon(raw["exits"]["jps-exits_0"]["coordinates"])
+
+        simulation = jps.Simulation(
+            model=jps.WarpDriverModel(),
+            geometry=geometry,
+            dt=simulation_params["dt"],
+        )
+        exit_stage_id = simulation.add_exit_stage(list(exit_polygon.exterior.coords)[:-1])
+        journey_id = simulation.add_journey(jps.JourneyDescription([exit_stage_id]))
+
+        positions = jps.distributions.distribute_by_number(
+            polygon=Polygon(distribution["coordinates"]),
+            number_of_agents=number_of_agents,
+            distance_to_agents=distribution_params["radius"] * 2,
+            distance_to_polygon=distribution_params["radius"],
+            seed=42,
+        )
+        for position in positions:
+            simulation.add_agent(
+                jps.WarpDriverModelAgentParameters(
+                    journey_id=journey_id,
+                    stage_id=exit_stage_id,
+                    position=position,
+                    desired_speed=distribution_params["v0"],
+                    radius=distribution_params["radius"],
+                )
+            )
+
+        measurement_polygons = {
+            name: cls._measurement_polygon(area)
+            for name, area in cls.MEASURING_AREAS.items()
+        }
+        density_samples = {name: [] for name in measurement_polygons}
+        speed_samples = {name: [] for name in measurement_polygons}
+        previous_positions = {name: {} for name in measurement_polygons}
+
+        while simulation.elapsed_time() < cls.T_MAX:
+            simulation.iterate()
+            elapsed = simulation.elapsed_time()
+            if elapsed < cls.T_MIN - simulation.delta_time():
+                continue
+
+            for name, polygon in measurement_polygons.items():
+                agent_ids = list(simulation.agents_in_polygon(polygon))
+                current_positions = {
+                    agent_id: simulation.agent(agent_id).position for agent_id in agent_ids
+                }
+
+                if elapsed >= cls.T_MIN:
+                    density_samples[name].append(len(agent_ids) / polygon.area)
+                    speed_samples[name].extend(
+                        np.hypot(
+                            position[0] - previous_positions[name][agent_id][0],
+                            position[1] - previous_positions[name][agent_id][1],
+                        )
+                        / simulation.delta_time()
+                        for agent_id, position in current_positions.items()
+                        if agent_id in previous_positions[name]
+                    )
+
+                previous_positions[name] = current_positions
+
+        measurements = {}
+        for name in measurement_polygons:
+            density = float(np.mean(density_samples[name]))
+            speed = float(np.mean(speed_samples[name]))
+            measurements[name] = {
+                "density": density,
+                "speed": speed,
+                "flow": density * speed,
+            }
+        return measurements
+
     def test_speed_density_relation(self):
-        pass
+        with zipfile.ZipFile(self.SCENARIO_ZIP) as zf:
+            raw = json.loads(zf.read("config.json"))
+            geometry = wkt.loads(zf.read("geometry.wkt").decode("utf-8"))
+
+        sweep_measurements = [
+            self._run_density(raw, geometry, number_of_agents)
+            for number_of_agents in self.AGENT_COUNTS
+        ]
+
+        for name in self.MEASURING_AREAS:
+            values = [measurement[name] for measurement in sweep_measurements]
+            densities = np.array([value["density"] for value in values])
+            speeds = np.array([value["speed"] for value in values])
+            flows = np.array([value["flow"] for value in values])
+
+            assert np.isfinite(densities).all(), f"{name}: invalid densities {densities}"
+            assert np.isfinite(speeds).all(), f"{name}: invalid speeds {speeds}"
+            assert np.isfinite(flows).all(), f"{name}: invalid flows {flows}"
+            assert np.all(np.diff(densities) > 0), (
+                f"{name}: density did not increase with population: {densities}"
+            )
+            assert np.all(np.diff(speeds) <= 0), (
+                f"{name}: speed increased with density: {speeds}"
+            )
+            assert np.allclose(flows, densities * speeds), (
+                f"{name}: flow is not speed multiplied by density"
+            )
 
 
 class TestRiMEA05PremovementTime:
@@ -894,17 +1027,125 @@ class TestRiMEA10RouteAllocation:
         result.cleanup()
 
 
-@pytest.mark.skip(reason="Requires route choice modeling — placeholder")
 class TestRiMEA11EscapeRouteChoice:
     """RiMEA Test 11: Choice of escape route.
 
     Geometry: 30m x 20m room, 2 exits (1m each) on same wall.
     Agents: 1000, occupied from left side.
-    Expected: Agents prefer closer exit; some use farther exit due to congestion.
+    Expected: Agents prefer the closer exit, but some use the farther exit.
+
+    Exit choice is made once, before movement, using the stochastic
+    distance-based choice model demonstrated in the Test 11 notebook. RiMEA
+    does not require agents to reconsider their exit while moving.
     """
 
+    SCENARIO_ZIP = (
+        STANDARDS_DIR
+        / "rimea"
+        / "scenario_files"
+        / "Rimea-11-choice-escape.zip"
+    )
+    CHOICE_SCALE = 3.0
+
+    @staticmethod
+    def _choose_exit(position, exit1_centroid, exit2_centroid, rng):
+        """Choose an exit using the notebook's distance-based logit model."""
+        distance1 = np.hypot(
+            position[0] - exit1_centroid.x,
+            position[1] - exit1_centroid.y,
+        )
+        distance2 = np.hypot(
+            position[0] - exit2_centroid.x,
+            position[1] - exit2_centroid.y,
+        )
+        probability_exit2 = 1.0 / (
+            1.0 + np.exp((distance2 - distance1) / TestRiMEA11EscapeRouteChoice.CHOICE_SCALE)
+        )
+        return 1 if rng.random() < probability_exit2 else 0
+
     def test_prefer_closer_exit(self):
-        pass
+        with zipfile.ZipFile(self.SCENARIO_ZIP) as zf:
+            raw = json.loads(zf.read("config.json"))
+            geometry = wkt.loads(zf.read("geometry.wkt").decode("utf-8"))
+
+        config = raw["config"]["simulation_settings"]
+        simulation_params = config["simulationParams"]
+        distribution = raw["distributions"]["jps-distributions_0"]
+        distribution_params = distribution["parameters"]
+
+        exit_polygons = [
+            Polygon(raw["exits"]["jps-exits_0"]["coordinates"]),
+            Polygon(raw["exits"]["jps-exits_1"]["coordinates"]),
+        ]
+
+        simulation = jps.Simulation(
+            model=jps.CollisionFreeSpeedModel(
+                strength_neighbor_repulsion=simulation_params[
+                    "strength_neighbor_repulsion"
+                ],
+                range_neighbor_repulsion=simulation_params[
+                    "range_neighbor_repulsion"
+                ],
+            ),
+            geometry=geometry,
+            dt=simulation_params["dt"],
+        )
+
+        exit_stage_ids = [
+            simulation.add_exit_stage(list(polygon.exterior.coords)[:-1])
+            for polygon in exit_polygons
+        ]
+        journey_ids = [
+            simulation.add_journey(jps.JourneyDescription([stage_id]))
+            for stage_id in exit_stage_ids
+        ]
+
+        positions = jps.distributions.distribute_by_number(
+            polygon=Polygon(distribution["coordinates"]),
+            number_of_agents=distribution_params["number"],
+            distance_to_agents=distribution_params["radius"] * 2,
+            distance_to_polygon=distribution_params["radius"],
+            seed=config["baseSeed"],
+        )
+
+        rng = np.random.default_rng(seed=config["baseSeed"])
+        exit_counts = [0, 0]
+        exit_centroids = [polygon.centroid for polygon in exit_polygons]
+
+        for position in positions:
+            exit_index = self._choose_exit(
+                position,
+                exit_centroids[0],
+                exit_centroids[1],
+                rng,
+            )
+            exit_counts[exit_index] += 1
+            simulation.add_agent(
+                jps.CollisionFreeSpeedModelAgentParameters(
+                    journey_id=journey_ids[exit_index],
+                    stage_id=exit_stage_ids[exit_index],
+                    position=position,
+                    desired_speed=distribution_params["v0"],
+                    radius=distribution_params["radius"],
+                )
+            )
+
+        max_iterations = int(
+            simulation_params["max_simulation_time"] / simulation.delta_time()
+        )
+        while simulation.agent_count() > 0 and simulation.iteration_count() < max_iterations:
+            simulation.iterate()
+
+        assert simulation.agent_count() == 0, (
+            f"{simulation.agent_count()} agents did not evacuate within "
+            f"{simulation_params['max_simulation_time']} seconds"
+        )
+        assert sum(exit_counts) == distribution_params["number"]
+        assert exit_counts[0] > exit_counts[1], (
+            f"Closer exit was not preferred: exit 1 took {exit_counts[0]} agents, "
+            f"exit 2 took {exit_counts[1]}"
+        )
+        assert exit_counts[1] > 0, "No agents used the farther alternative exit"
 
 
 class TestRiMEA12aGoalPosition:
