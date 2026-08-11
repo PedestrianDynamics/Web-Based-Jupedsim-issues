@@ -145,11 +145,20 @@ See `_staging/convert.py::clean_config` for the synthesis code.
 - **Schema cleanup** (A3): `desired_speed_distribution` and
   `desired_speed_std` removed (duplicates of `v0_distribution` and `v0_std`).
 
-### B6. Verif.2.5 — Reduced visibility (S6) — PENDING
+### B6. Verif.2.5 — Reduced visibility (S6)
 
-Not shipped in this PR. NIST's smoke / extinction-coefficient correlation
-requires features (visibility-driven speed reduction) absent from
-CollisionFreeSpeedModel. Stays in source tree until those features land.
+- `CollisionFreeSpeedModel` has no native smoke field. The pytest V&V adapter
+  therefore makes the smoke assignment explicit: it converts the uniform
+  extinction coefficient to a zone `speed_factor` before simulation.
+- The selected model-specific correlation is NIST Equation 2 with a linear
+  fractional reduction, `c(K_s) = max(0.3 / 1.25, 1 - 0.5 K_s)`. At the NIST
+  value `K_s = 1 /m`, the assigned speed is `1.25 * 0.5 = 0.625 m/s`.
+- The geometry is extended to 120 m (10 m + the NIST 100 m measurement segment
+  + 10 m), consistent with the other single-agent speed tests. The exit opening
+  remains the NIST-specified 1 m wide.
+- This verifies the web-community smoke-to-speed assignment and the resulting
+  travel time. It does not claim native, spatially evolving smoke transport in
+  JuPedSim.
 
 ### B7. Verif.2.6 — Agent incapacitation (S7.x) — PENDING
 

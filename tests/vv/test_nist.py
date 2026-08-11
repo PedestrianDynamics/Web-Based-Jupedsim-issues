@@ -3,9 +3,9 @@
 Reference: Ronchi, Kuligowski, Reneke, Peacock, Nilsson (2013). NIST Technical
 Note 1822. https://nvlpubs.nist.gov/nistpubs/technicalnotes/NIST.TN.1822.pdf
 
-The contributions cover 10 of the 17 NIST verification tests. Tests blocked on
-JuPedSim simulator features absent from CollisionFreeSpeedModel (Verif.2.5
-visibility, Verif.2.6 FED, Verif.2.7 elevator, Verif.2.10 reduced mobility,
+The contributions cover 11 of the 17 NIST verification tests. Tests blocked on
+JuPedSim simulator features absent from CollisionFreeSpeedModel (Verif.2.6
+FED, Verif.2.7 elevator, Verif.2.10 reduced mobility,
 Verif.3.2 social influence, Verif.3.3 affiliation, Verif.4.1 dynamic exits)
 are documented in standards/nist/README.md and not exercised here.
 
@@ -19,8 +19,10 @@ standards/nist/MODIFICATIONS.md.
 
 from __future__ import annotations
 
+import json
 import pathlib
 import sys
+import tempfile
 from copy import deepcopy
 
 import numpy as np
@@ -283,6 +285,163 @@ class TestNist24Demographics:
         assert abs(params["v0"] - 1.2) < 1e-6
         assert abs(params["v0_std"] - 0.2) < 1e-6
         assert int(params["number"]) == 100
+
+
+# ---------------------------------------------------------------------------
+# Verif.2.5 - Reduced visibility versus walking speed
+# ---------------------------------------------------------------------------
+
+
+class TestNist25ReducedVisibility:
+    """NIST Verif.2.5 - smoke extinction reduces walking speed.
+
+    CollisionFreeSpeedModel has no native smoke field.  The V&V adapter uses
+    NIST Equation 1, ``v_smoke = v_clear * c(K_s)``, and maps the resulting
+    factor to a zone covering the smoky corridor.  The selected model-specific
+    correlation is declared explicitly below so that the expected travel time
+    is calculated independently from the trajectory.
+
+    The NIST 100 m measurement corridor has 10 m acceleration/isolation
+    buffers.  At K_s = 1 /m, c(K_s) = 0.5, hence the expected speed is
+    1.25 * 0.5 = 0.625 m/s and the expected time over 100 m is 160 s.
+    """
+
+    CLEAR_SPEED_M_S = 1.25
+    EXTINCTION_COEFFICIENT_PER_M = 1.0
+    SPEED_REDUCTION_PER_EXTINCTION_M = 0.5
+    MINIMUM_SPEED_M_S = 0.30
+    MEAS_START_X = 10.0
+    MEAS_END_X = 110.0
+    TIME_TOLERANCE_S = 0.5
+
+    @classmethod
+    def smoke_speed_factor(cls, extinction_coefficient_per_m: float) -> float:
+        """Return c(K_s) for the correlation selected by this model adapter.
+
+        This is NIST Equation 2: a linear fractional reduction with the common
+        dense-smoke minimum speed recommended by TN 1822 (0.3--0.4 m/s).
+        """
+        if extinction_coefficient_per_m < 0:
+            raise ValueError("extinction coefficient must be non-negative")
+        linear_factor = (
+            1.0
+            - cls.SPEED_REDUCTION_PER_EXTINCTION_M
+            * extinction_coefficient_per_m
+        )
+        minimum_factor = cls.MINIMUM_SPEED_M_S / cls.CLEAR_SPEED_M_S
+        return max(minimum_factor, linear_factor)
+
+    def test_smoke_reduced_travel_time(self):
+        speed_factor = self.smoke_speed_factor(
+            self.EXTINCTION_COEFFICIENT_PER_M
+        )
+        expected_speed = self.CLEAR_SPEED_M_S * speed_factor
+        expected_time = (
+            self.MEAS_END_X - self.MEAS_START_X
+        ) / expected_speed
+
+        raw = {
+            "config": {
+                "simulation_settings": {
+                    "baseSeed": 42,
+                    "simulationParams": {
+                        "model_type": "CollisionFreeSpeedModel",
+                        "max_simulation_time": 220,
+                    },
+                }
+            },
+            "distributions": {
+                "jps-distributions_0": {
+                    "type": "polygon",
+                    "coordinates": [
+                        [0.5, 0.75],
+                        [1.5, 0.75],
+                        [1.5, 1.25],
+                        [0.5, 1.25],
+                        [0.5, 0.75],
+                    ],
+                    "parameters": {
+                        "number": 1,
+                        "radius": 0.15,
+                        "v0": self.CLEAR_SPEED_M_S,
+                        "distribution_mode": "by_number",
+                        "radius_distribution": "constant",
+                        "v0_distribution": "constant",
+                        "use_flow_spawning": False,
+                    },
+                    "journey_weights": [
+                        {"journey_id": "jps-journeys_0", "weight": 100}
+                    ],
+                }
+            },
+            "exits": {
+                "jps-exits_0": {
+                    "type": "polygon",
+                    # NIST specifies a 1 m opening at the corridor end.
+                    "coordinates": [
+                        [119.7, 0.5],
+                        [120.0, 0.5],
+                        [120.0, 1.5],
+                        [119.7, 1.5],
+                        [119.7, 0.5],
+                    ],
+                }
+            },
+            "zones": {
+                "jps-zones_0": {
+                    "coordinates": [
+                        [0.0, 0.0],
+                        [120.0, 0.0],
+                        [120.0, 2.0],
+                        [0.0, 2.0],
+                        [0.0, 0.0],
+                    ],
+                    # Explicit K_s -> c(K_s) assignment for uniform smoke.
+                    "speed_factor": speed_factor,
+                }
+            },
+            "journeys_v2": [
+                {
+                    "id": "jps-journeys_0",
+                    "name": "jps-journeys_0",
+                    "color": "#888888",
+                    "sequence": ["jps-exits_0"],
+                }
+            ],
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            scenario_dir = pathlib.Path(tmpdir)
+            (scenario_dir / "config.json").write_text(
+                json.dumps(raw), encoding="utf-8"
+            )
+            (scenario_dir / "geometry.wkt").write_text(
+                "POLYGON ((0 0, 120 0, 120 2, 0 2, 0 0))",
+                encoding="utf-8",
+            )
+            scenario = load_scenario(str(scenario_dir))
+            result = run_scenario(scenario, seed=42)
+            try:
+                trajectory = result.trajectory_dataframe().sort_values(
+                    ["id", "frame"]
+                )
+                t_in = trajectory.loc[
+                    trajectory.x >= self.MEAS_START_X, "frame"
+                ].iloc[0] / result.frame_rate
+                t_out = trajectory.loc[
+                    trajectory.x >= self.MEAS_END_X, "frame"
+                ].iloc[0] / result.frame_rate
+                observed_time = t_out - t_in
+            finally:
+                result.cleanup()
+
+        assert observed_time == pytest.approx(
+            expected_time, abs=self.TIME_TOLERANCE_S
+        ), (
+            f"K_s={self.EXTINCTION_COEFFICIENT_PER_M}/m produced "
+            f"{observed_time:.2f}s over 100 m; correlation predicts "
+            f"{expected_time:.2f}s at {expected_speed:.3f} m/s"
+        )
 
 
 # ---------------------------------------------------------------------------

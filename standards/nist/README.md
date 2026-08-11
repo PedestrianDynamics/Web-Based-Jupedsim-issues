@@ -22,7 +22,7 @@ For deviations from the NIST original specifications see
 | Verif.2.2  | Speed on stairs (downward)             | covered  | `Nist-2-2-stairs-down.zip` |
 | Verif.2.3  | Movement around a corner               | covered  | `Nist-2-3-corner.zip` |
 | Verif.2.4  | Assigned agent demographics            | covered  | `Nist-2-4-demographics.zip` |
-| Verif.2.5  | Reduced visibility vs walking speed    | pending  | requires smoke / extinction-coefficient handling |
+| Verif.2.5  | Reduced visibility vs walking speed    | covered  | pytest-built 120 m corridor; explicit extinction-coefficient correlation over the NIST 100 m measurement segment |
 | Verif.2.6  | Agent incapacitation (FED)             | pending  | requires FED sub-model |
 | Verif.2.7  | Elevator usage                         | pending  | requires elevator component |
 | Verif.2.8  | Horizontal counter-flows               | covered  | `Nist-2-8-counterflow-{0,10,50,100}.zip` + `scenario_files/nist2_8_counterflow_reference.csv` |
@@ -85,7 +85,7 @@ See [`MODIFICATIONS.md`](MODIFICATIONS.md) for the full audit trail. Summary:
 
 ## Pending NIST tests
 
-The "pending" rows above are blocked on simulator features that are not yet
+The remaining "pending" rows above are blocked on simulator features that are not yet
 in the JuPedSim CollisionFreeSpeedModel. Each will be added in a follow-up
 PR once the corresponding feature lands.
 
