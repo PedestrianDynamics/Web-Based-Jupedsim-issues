@@ -7,17 +7,17 @@
       "full_name": "Revised Guidelines for Evacuation Analysis for New and Existing Passenger Ships",
       "verification": "pytest",
       "tests": [
-        {"id": "IMO 1", "name": "Walking speed in a corridor", "criterion": "Evacuation time ~ d/v +/- 20%", "status": "covered", "test": "TestSA01"},
-        {"id": "IMO 2", "name": "Walking speed up stairs", "criterion": "Maintain assigned speed upstairs", "status": "pending", "note": "Not implemented as an IMO-tier test; stair speed is covered by RiMEA-02 / NIST-2.2."},
-        {"id": "IMO 3", "name": "Walking speed down stairs", "criterion": "Maintain assigned speed downstairs", "status": "pending", "note": "Not implemented as an IMO-tier test; covered by RiMEA-03 / NIST-2.2."},
-        {"id": "IMO 4", "name": "Exit flow rate", "criterion": "Flow through a 1 m exit is physically plausible", "status": "covered", "test": "TestRE01"},
-        {"id": "IMO 5", "name": "Response time", "criterion": "Agents respect an assigned pre-movement distribution", "status": "pending", "note": "Covered by RiMEA-05 / NIST-1.1; no IMO-tier test."},
-        {"id": "IMO 6", "name": "Rounding corners", "criterion": "Navigate a 90-degree corner, stay in geometry", "status": "covered", "test": "TestSA04"},
-        {"id": "IMO 7", "name": "Assignment of population demographics", "criterion": "All agents evacuate within [25 s, 120 s]", "status": "covered", "test": "TestSA02"},
-        {"id": "IMO 8", "name": "Counterflow", "criterion": "Counterflow increases evacuation time", "status": "covered", "test": "TestRE04"},
-        {"id": "IMO 9", "name": "Exit-count sensitivity", "criterion": "Halving the exits increases evacuation time", "status": "covered", "test": "TestRE02"},
-        {"id": "IMO 10", "name": "Exit route allocation", "criterion": "Agents use assigned escape routes", "status": "pending", "note": "RE-03 is declared in test_imo_room_evacuation.py but not implemented; route allocation is covered by RiMEA-10 / NIST-3.1."},
-        {"id": "IMO 11", "name": "Congestion / flow on stairs", "criterion": "Congestion forms at flow constraints", "status": "pending", "note": "Covered by RiMEA-16 / NIST-5.1; no IMO-tier test."}
+        {"id": "IMO 1", "name": "Walking speed in a corridor", "criterion": "Evacuation time ~ d/v +/- 20%", "status": "covered", "test": "TestIMO01WalkingSpeedCorridor"},
+        {"id": "IMO 2", "name": "Walking speed up stairs", "criterion": "Maintain assigned speed upstairs", "status": "covered", "test": "TestIMO02WalkingSpeedUpstairs"},
+        {"id": "IMO 3", "name": "Walking speed down stairs", "criterion": "Maintain assigned speed downstairs", "status": "covered", "test": "TestIMO03WalkingSpeedDownstairs"},
+        {"id": "IMO 4", "name": "Exit flow rate", "criterion": "Flow through a 1 m exit is physically plausible", "status": "covered", "test": "TestIMO04ExitFlowRate"},
+        {"id": "IMO 5", "name": "Response time", "criterion": "Agents respect an assigned pre-movement distribution", "status": "covered", "test": "TestIMO05ResponseTime"},
+        {"id": "IMO 6", "name": "Rounding corners", "criterion": "Navigate a 90-degree corner, stay in geometry", "status": "covered", "test": "TestIMO06RoundingCorners"},
+        {"id": "IMO 7", "name": "Assignment of population demographics", "criterion": "All agents evacuate within [25 s, 120 s]", "status": "covered", "test": "TestIMO07PopulationDemographics"},
+        {"id": "IMO 8", "name": "Counterflow", "criterion": "Counterflow increases evacuation time", "status": "covered", "test": "TestIMO08Counterflow"},
+        {"id": "IMO 9", "name": "Exit-count sensitivity", "criterion": "Halving the exits increases evacuation time", "status": "covered", "test": "TestIMO09ExitCountSensitivity"},
+        {"id": "IMO 10", "name": "Exit route allocation", "criterion": "Agents use assigned escape routes", "status": "covered", "test": "TestIMO10ExitRouteAllocation"},
+        {"id": "IMO 11", "name": "Congestion / flow on stairs", "criterion": "1D speed-density curve matches the empirical envelope", "status": "covered", "test": "TestIMO11StairCongestion"}
       ]
     },
     {
