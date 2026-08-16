@@ -3,9 +3,9 @@
 Reference: Ronchi, Kuligowski, Reneke, Peacock, Nilsson (2013). NIST Technical
 Note 1822. https://nvlpubs.nist.gov/nistpubs/technicalnotes/NIST.TN.1822.pdf
 
-The contributions cover 11 of the 17 NIST verification tests. Tests blocked on
-JuPedSim simulator features absent from CollisionFreeSpeedModel (Verif.2.6
-FED, Verif.2.7 elevator, Verif.2.10 reduced mobility,
+The contributions cover 12 of the 17 NIST verification tests. Tests blocked on
+JuPedSim simulator features absent from CollisionFreeSpeedModel (Verif.2.7
+elevator, Verif.2.10 reduced mobility,
 Verif.3.2 social influence, Verif.3.3 affiliation, Verif.4.1 dynamic exits)
 are documented in standards/nist/README.md and not exercised here.
 
@@ -20,11 +20,13 @@ standards/nist/MODIFICATIONS.md.
 from __future__ import annotations
 
 import json
+import math
 import pathlib
 import sys
 import tempfile
 from copy import deepcopy
 
+import jupedsim as jps
 import numpy as np
 import pytest
 from shapely.geometry import Point, Polygon
@@ -445,6 +447,128 @@ class TestNist25ReducedVisibility:
 
 
 # ---------------------------------------------------------------------------
+# Verif.2.6 - Occupant incapacitation (Fractional Effective Dose)
+#
+# FDS+Evac reference mentinoed in NIST TN 1822:
+# "Fire Dynamics Simulator with Evacuation: FDS+Evac Technical Reference and
+# User's Guide", section 3.3, equations 11--14 (pp. 15--16), and the FED
+# verification case in section 4.2 (p. 20):
+# ---------------------------------------------------------------------------
+
+
+class TestNist26OccupantIncapacitation:
+    """NIST Verif.2.6 - simulated and hand-calculated FED=1 times agree.
+
+    A single occupant is held at the centre of the specified 10 m x 10 m room
+    by an indefinite waiting stage, equivalent to NIST's >1,000,000 s
+    pre-evacuation time. Constant CO, CO2, and O2 conditions are sampled at the
+    occupant position. A small V&V adapter accumulates the FDS+Evac/Purser FED
+    equations on every JuPedSim timestep and sets desired speed to zero at
+    incapacitation. JuPedSim itself does not provide a native FED model.
+    """
+
+    CO_PPM = 5000.0
+    CO2_PERCENT = 2.0
+    O2_PERCENT = 18.0
+    INITIAL_DESIRED_SPEED_M_S = 1.25
+    DT_S = 0.05
+    MAX_TIME_S = 300.0
+    CENTRE = (5.0, 5.0)
+
+    @staticmethod
+    def _co_fed_rate(co_ppm: float) -> float:
+        """FDS+Evac equation 12, returned as FED per second."""
+        return 4.607e-7 * co_ppm**1.036
+
+    @staticmethod
+    def _o2_fed_rate(o2_percent: float) -> float:
+        """FDS+Evac equation 13, returned as FED per second."""
+        return 1.0 / (
+            60.0 * math.exp(8.13 - 0.54 * (20.9 - o2_percent))
+        )
+
+    @staticmethod
+    def _co2_hyperventilation(co2_percent: float) -> float:
+        """FDS+Evac equation 14, dimensionless CO2 multiplier."""
+        return math.exp(0.1930 * co2_percent + 2.0004) / 7.1
+
+    def test_time_to_fed_one(self):
+        simulation = jps.Simulation(
+            model=jps.CollisionFreeSpeedModel(),
+            geometry=Polygon([(0, 0), (10, 0), (10, 10), (0, 10)]),
+            dt=self.DT_S,
+        )
+        waiting_stage = simulation.add_waiting_set_stage([self.CENTRE])
+        journey = simulation.add_journey(
+            jps.JourneyDescription([waiting_stage])
+        )
+        agent_id = simulation.add_agent(
+            jps.CollisionFreeSpeedModelAgentParameters(
+                journey_id=journey,
+                stage_id=waiting_stage,
+                position=self.CENTRE,
+                desired_speed=self.INITIAL_DESIRED_SPEED_M_S,
+                radius=0.15,
+            )
+        )
+
+        fed_co = 0.0
+        fed_o2 = 0.0
+        total_fed = 0.0
+        incapacitation_time = None
+
+        while simulation.elapsed_time() < self.MAX_TIME_S:
+            simulation.iterate()
+
+            # The test hazard is spatially and temporally constant, but it is
+            # sampled per agent and integrated per timestep just as a future
+            # spatial hazard field would be.
+            _position = simulation.agent(agent_id).position
+            fed_co += self._co_fed_rate(self.CO_PPM) * simulation.delta_time()
+            fed_o2 += self._o2_fed_rate(self.O2_PERCENT) * simulation.delta_time()
+            total_fed = (
+                fed_co * self._co2_hyperventilation(self.CO2_PERCENT)
+                + fed_o2
+            )
+
+            if total_fed >= 1.0:
+                agent = simulation.agent(agent_id)
+                assert agent.model.desired_speed == pytest.approx(
+                    self.INITIAL_DESIRED_SPEED_M_S
+                )
+                agent.model.desired_speed = 0.0
+                incapacitation_time = simulation.elapsed_time()
+                break
+
+        assert incapacitation_time is not None, (
+            f"FED reached only {total_fed:.3f} by {self.MAX_TIME_S}s"
+        )
+        assert simulation.agent(agent_id).model.desired_speed == 0.0
+        assert simulation.agent(agent_id).position == pytest.approx(self.CENTRE)
+
+        # Independent closed-form calculation for constant concentrations.
+        # It intentionally does not call the timestep adapter methods above.
+        expected_rate = (
+            4.607e-7
+            * self.CO_PPM**1.036
+            * math.exp(0.1930 * self.CO2_PERCENT + 2.0004)
+            / 7.1
+            + 1.0
+            / (
+                60.0
+                * math.exp(8.13 - 0.54 * (20.9 - self.O2_PERCENT))
+            )
+        )
+        expected_time = 1.0 / expected_rate
+
+        # A discrete integrator crosses FED=1 on the first timestep at or
+        # after the analytical value, so one simulation step is the limit.
+        assert expected_time <= incapacitation_time
+        assert incapacitation_time - expected_time <= simulation.delta_time(), (
+            f"FED=1 at {incapacitation_time:.3f}s; independent calculation "
+            f"predicts {expected_time:.3f}s"
+        )     
+# ---------------------------------------------------------------------------
 # Verif.2.8 - Horizontal counter-flows
 # ---------------------------------------------------------------------------
 
@@ -543,6 +667,43 @@ class TestNist29Groups:
             )
         finally:
             result.cleanup()
+
+# ---------------------------------------------------------------------------
+# Verif.2.10 - Agents with movement disabilities
+# ---------------------------------------------------------------------------
+
+
+class TestNist210Disabilities:
+    """Same as ISO Test 7 - 24 occupants overtake one slower, larger occupant.
+
+    Two otherwise identical scenarios are compared. In the disability case,
+    the Zone-2 occupant has a lower desired speed and a larger radius. In the
+    control case, that occupant has the same characteristics as the other
+    occupants. Acceptance: the disability case has a longer total evacuation
+    time than the control case.
+    """
+
+    def test_movement_disability_increases_evacuation_time(self):
+        disability = _load("Nist-2-10-movement-disabilities")
+        control = _load("Nist-2-10-movement-disabilities-no-disability")
+
+        disability_result = run_scenario(disability, seed=42)
+        control_result = run_scenario(control, seed=42)
+        try:
+            assert disability_result.agents_remaining == 0, (
+                "not all agents evacuated in the movement-disability scenario"
+            )
+            assert control_result.agents_remaining == 0, (
+                "not all agents evacuated in the control scenario"
+            )
+            assert disability_result.evacuation_time > control_result.evacuation_time, (
+                "expected the movement-disability scenario to take longer: "
+                f"{disability_result.evacuation_time:.2f}s versus "
+                f"{control_result.evacuation_time:.2f}s"
+            )
+        finally:
+            disability_result.cleanup()
+            control_result.cleanup()
 
 
 # ---------------------------------------------------------------------------

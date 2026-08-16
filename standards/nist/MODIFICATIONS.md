@@ -160,9 +160,20 @@ See `_staging/convert.py::clean_config` for the synthesis code.
   travel time. It does not claim native, spatially evolving smoke transport in
   JuPedSim.
 
-### B7. Verif.2.6 — Agent incapacitation (S7.x) — PENDING
+### B7. Verif.2.6 — Agent incapacitation (S7.x)
 
-Not shipped. NIST's FED-based incapacitation needs an FED sub-model.
+- `CollisionFreeSpeedModel` has no native hazard or FED state. The pytest V&V
+  adapter accumulates the CO, CO2-hyperventilation, and low-O2 equations from
+  FDS+Evac section 3.3 (equations 11--14) on every JuPedSim timestep.
+- One occupant is held at `(5, 5)` by an indefinite waiting stage inside the
+  NIST 10 m x 10 m room. This is equivalent to the specified pre-evacuation
+  time greater than 1,000,000 s without requiring the test to run that long.
+- Constant conditions are `CO=5000 ppm`, `CO2=2%`, and `O2=18%`. When FED
+  reaches one, the adapter sets the agent's desired speed to zero. The observed
+  threshold time must be within one simulation timestep of a separate
+  closed-form calculation.
+- This verifies the web-community FED assignment; it does not claim native
+  fire, gas-transport, or FED capabilities in JuPedSim.
 
 ### B8. Verif.2.7 — Elevator usage (S8) — PENDING
 
@@ -182,9 +193,26 @@ test alone).
   through the loader's group-behaviour API (when available) or by post-hoc
   analysis of trajectory bunching.
 
-### B11. Verif.2.10 — Movement disabilities (S11.x) — PENDING
+### B11. Verif.2.10 — Movement disabilities (S11.x)
 
-Not shipped. Requires reduced-mobility / per-agent size profiles.
+- **Scenario reuse:** the two NIST scenario ZIPs are copied and renamed from
+  the corresponding ISO Test 7 scenarios because they exercise the same
+  overtaking behaviour required here: 24 occupants move past one occupant
+  with reduced mobility. The pytest test loads
+  `Nist-2-10-movement-disabilities.zip` and
+  `Nist-2-10-movement-disabilities-no-disability.zip` from
+  `standards/nist/scenario_files/`.
+- In `Nist-2-10-movement-disabilities.zip`, the 24 reference occupants have
+  `v0 = 1.25 m/s` and `radius = 0.2 m`; the reduced-mobility occupant has
+  `v0 = 0.8 m/s` and `radius = 0.4 m`.
+- The control scenario,
+  `Nist-2-10-movement-disabilities-no-disability.zip`, keeps the same geometry,
+  population, routes, and model parameters, but assigns the comparison
+  occupant the reference values `v0 = 1.25 m/s` and `radius = 0.2 m`.
+- Both scenarios must evacuate all 25 occupants. Acceptance is comparative:
+  total evacuation time with the slower, larger occupant must exceed the
+  control evacuation time. This tests the effect of per-agent speed and size
+  parameters; it does not introduce a separate physiological disability model.
 
 ### B12. Verif.3.1 — Exit route allocation (S12)
 
