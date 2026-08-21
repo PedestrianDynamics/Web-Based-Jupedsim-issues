@@ -232,17 +232,43 @@ test alone).
   guideline — the Figure 8 layout has 12 rooms, so 13 is the faithful count.
   The allocation split (8 rooms → main, 4 → secondary) matches the standard.
 
-### B13. Verif.3.2 — Social influence (S13.x) — PENDING
+### B13. Verif.3.2 — Social influence (S13.x)
 
-Not shipped. Requires social-influence component.
+- **Scenario reuse:** `Nist-3-2-social-influence-1.zip` and
+  `Nist-3-2-social-influence-2.zip` are copied and renamed from the equivalent
+  ISO Test 15 scenarios. Their config and geometry contents are unchanged.
+- Scenario 1 gives two free occupants balanced choices between two equidistant
+  exits. Scenario 2 adds a third occupant deterministically assigned to Exit 2.
+- The NIST criterion is evaluated over 40 seeds: the committed occupant should
+  increase Exit 2 usage among the two free occupants. CollisionFreeSpeedModel
+  has no social-influence mechanism, so usage is unchanged and the real
+  criterion is retained as a strict `xfail` rather than replaced by a weaker
+  passing assertion.
 
-### B14. Verif.3.3 — Affiliation (S14.x) — PENDING
+### B14. Verif.3.3 — Affiliation (S14.x)
 
-Not shipped. Requires affiliation component.
+- **Scenario reuse:** `Nist-3-3-familiar-exits.zip` is copied and renamed from
+  the equivalent ISO Test 16 scenario without changes to its config or
+  geometry.
+- CollisionFreeSpeedModel has no intrinsic familiarity state. Affiliation is
+  therefore represented by the existing journey weights: a 50/50 baseline
+  must use the two equidistant exits within a 10% difference, while a 20/80
+  assignment must make Exit 2 strictly preferred over a 20-seed sweep.
+- This verifies assigned familiar-exit preference through route weights; it
+  does not introduce a behavioural affiliation sub-model.
 
-### B15. Verif.4.1 — Dynamic exit availability (S15) — PENDING
+### B15. Verif.4.1 — Dynamic exit availability (S15)
 
-Not shipped. Requires runtime exit toggling (NIST closes Exit 1 at t = 1 s).
+- **Scenario reuse:** `Nist-4-1-dynamic-exits.zip` is copied and renamed from
+  the equivalent ISO Test 9 scenario without changes to its config or
+  geometry.
+- The occupant initially targets Exit 1. At `t = 1 s`, the runtime adapter
+  changes that agent's active target to Exit 2, and the final trajectory must
+  terminate at Exit 2.
+- The runner does not globally close or disable the Exit 1 stage. Redirecting
+  the affected occupant is the web-community representation of that exit
+  becoming unavailable, so this verifies runtime rerouting but not a native
+  JuPedSim exit-toggle API.
 
 ### B16. Verif.5.1 — Congestion (S16)
 
