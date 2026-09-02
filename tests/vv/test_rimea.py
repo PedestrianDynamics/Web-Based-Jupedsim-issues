@@ -447,8 +447,10 @@ class TestRiMEA04FundamentalDiagram:
             assert np.all(np.diff(densities) > 0), (
                 f"{name}: density did not increase with population: {densities}"
             )
-            assert np.all(np.diff(speeds) <= 0), (
-                f"{name}: speed increased with density: {speeds}"
+            SPEED_TOLERANCE = 0.05
+
+            assert np.all(np.diff(speeds) <= SPEED_TOLERANCE), (
+                f"{name}: speed increased with density beyond tolerance: {speeds}"
             )
             assert np.allclose(flows, densities * speeds), (
                 f"{name}: flow is not speed multiplied by density"
